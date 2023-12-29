@@ -100,11 +100,15 @@ const axios = require('axios');
     })
   )
 
+  /*const browser = await puppeteer.launch({headless: false, devtools: true, args: [`
+  --proxy-server=${process.env.PROXY_TYPE}://${process.env.PROXY_IP}:${process.env.PROXY_PORT},`
+]});*/
   const browser = await puppeteer.launch({headless: false, devtools: true});
   const context = await browser.createIncognitoBrowserContext()
 
   async function sendsms(phone) {
     const page = await context.newPage();
+    //await page.authenticate({username:process.env.PROXY_LOGIN, password:process.env.PROXY_PASSWORD});
     page.on('response', async (response) => {
       try {
         if (!response.ok()) return console.log(response.url());
