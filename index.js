@@ -63,7 +63,7 @@ const axios = require('axios');
               
               if (resolve.errors_description === 'Неверный код') {
                 axios.post('https://api.rucaptcha.com/reportIncorrect', {
-                  "clientKey": "deffec496478deb0e3bf3c0dcf9c9192",
+                  "clientKey": "API KEY RUCAPTCHA",
                   "taskId": captcha.data.taskId,
                 });
                 await captcha(response, page, cursor)
@@ -157,8 +157,5 @@ const axios = require('axios');
     }
   }
 
-  //sendsms('+375256279303');
-  sendsms('+375293602089');
-  //sendsms('+375447488169');
-
+  sendsms('YOUR PHONE NUMBER');
 })();
