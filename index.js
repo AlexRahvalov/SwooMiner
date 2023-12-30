@@ -20,7 +20,7 @@ const axios = require('axios');
     const captcha_id = data.captcha_id;
     const image = data.captcha_image_base64;
     const captcha = await axios.post('https://api.rucaptcha.com/createTask', {
-      "clientKey": "deffec496478deb0e3bf3c0dcf9c9192",
+      "clientKey": "API KEY RUCAPTCHA",
       "task": {
         "type": "ImageToTextTask",
         "body": image,
@@ -43,7 +43,7 @@ const axios = require('axios');
     while (status) {
       await sleep(1000)
       const result = await axios.post('https://api.rucaptcha.com/getTaskResult', {
-        "clientKey": "deffec496478deb0e3bf3c0dcf9c9192",
+        "clientKey": "API KEY RUCAPTCHA",
         "taskId": captcha.data.taskId,
       })
       console.log(result.data)
