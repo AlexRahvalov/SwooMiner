@@ -20,7 +20,7 @@ const axios = require('axios');
     const captcha_id = data.captcha_id;
     const image = data.captcha_image_base64;
     const captcha = await axios.post('https://api.rucaptcha.com/createTask', {
-      "clientKey": "Your rucaptcha API key",  //  Paste your API key from the rucaptcha.com website
+      "clientKey": "deffec496478deb0e3bf3c0dcf9c9192",
       "task": {
         "type": "ImageToTextTask",
         "body": image,
@@ -43,7 +43,7 @@ const axios = require('axios');
     while (status) {
       await sleep(1000)
       const result = await axios.post('https://api.rucaptcha.com/getTaskResult', {
-        "clientKey": "Your rucaptcha API key",  //  Paste your API key from the rucaptcha.com website
+        "clientKey": "deffec496478deb0e3bf3c0dcf9c9192",
         "taskId": captcha.data.taskId,
       })
       console.log(result.data)
@@ -63,7 +63,7 @@ const axios = require('axios');
               
               if (resolve.errors_description === 'Неверный код') {
                 axios.post('https://api.rucaptcha.com/reportIncorrect', {
-                  "clientKey": "Your rucaptcha API key",  //  Paste your API key from the rucaptcha.com website
+                  "clientKey": "deffec496478deb0e3bf3c0dcf9c9192",
                   "taskId": captcha.data.taskId,
                 });
                 await captcha(response, page, cursor)
@@ -146,14 +146,15 @@ const axios = require('axios');
     });
     await cursor.click('[data-qa-selector="continue-button"]');
     while (true) {
-      await new Promise(r => setTimeout(r, getRndInteger(60 * 1000, 90 * 1000))); //  Limit the frequency of sending SMS messages from every 60 seconds to every 90 seconds. 
+      //await new Promise(r => setTimeout(r, getRndInteger(900 * 1000, 1800 * 1000)));
+      await new Promise(r => setTimeout(r, getRndInteger(60 * 1000, 90 * 1000)));
       try {
         await page.waitForSelector('.m-code-resend__button');
         await cursor.click('.m-code-resend__button');
       } catch (e) {
-        console.error('Cannot find the resend button.');
+        console.error('cant find resend btn');
       }
     }
   }
-  sendsms('Your phone number');
+  sendsms('+375293602089');
 })();
