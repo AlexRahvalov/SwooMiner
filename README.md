@@ -4,8 +4,10 @@
 Приложение Swoo Pay вознаграждает пользователей внутренней криптовалютой (SWOO) при получении SMS, которую можно обменять на Bitcoin, Ethereum и другие криптовалюты.
 
 В настоящее время приложение Swoo Pay доступно в:
-Республике Беларусь - работает
+Республике Беларусь - работает.
+
 Российская Федерация - неизвесто.
+
 Украина - не работает.
 
 # SwooMiner ENG
@@ -15,5 +17,7 @@ The Swoo Pay application, after receiving an SMS, gives you internal crypto curr
 
 The Swoo Pay app works in:
 Republic of Belarus - Works in.
+
 Russian Federation - Not known.
+
 Ukraine - Does not work.
