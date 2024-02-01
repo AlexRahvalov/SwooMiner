@@ -133,10 +133,8 @@ const axios = require('axios');
       deviceCategory: 'desktop'
     }).toString());
     await page.goto('https://premier.one/', {waitUntil: "domcontentloaded"});
-    await page.waitForSelector('.m-contextual-menu__open-button');
-    await cursor.click('.m-contextual-menu__open-button');
-    await page.waitForSelector('[data-name="user-login"]');
-    await cursor.click('[data-name="user-login"]');
+    await page.waitForSelector('.a-button.a-button--secondary.a-button--small.a-button--left.a-button.w-header__button-login.w-header__buttons-item');
+    await cursor.click('.a-button.a-button--secondary.a-button--small.a-button--left.a-button.w-header__button-login.w-header__buttons-item');
     await page.waitForSelector('[data-qa-selector="phone"]');
     await page.evaluate(() => {
       document.querySelector('[data-qa-selector="phone"]').value = '';
