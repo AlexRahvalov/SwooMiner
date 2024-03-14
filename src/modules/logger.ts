@@ -23,4 +23,20 @@ export default class Logger {
       format: winston.format.simple(),
     }));
   }
+
+  error(message: string) {
+    this.logger.error(`[${(new Date()).toLocaleString()}] ${message}`);
+  }
+
+  info(message: string) {
+    this.logger.info(`[${(new Date()).toLocaleString()}] ${message}`);
+  }
+
+  verbose(message: string) {
+    this.logger.verbose(`[${(new Date()).toLocaleString()}] ${message}`);
+  }
+
+  debug(message: string) {
+    this.logger.debug(`[${(new Date()).toLocaleString()}] ${message}`);
+  }
 }
