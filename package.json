@@ -17,6 +17,7 @@
     "puppeteer-extra-plugin-adblocker": "^2.13.6",
     "puppeteer-extra-plugin-stealth": "^2.11.2",
     "rimraf": "^3.0.2",
-    "user-agents": "^1.1.69"
+    "user-agents": "^1.1.69",
+    "winston": "^3.12.0"
   }
 }
