@@ -69,10 +69,39 @@ export default class Premier {
 
     await cursor.click('[data-qa-selector="continue-button"]');
 
-    while (true) {
-      const delay = Utils.getRndInteger(config.limits.resend.min, config.limits.resend.max);
+    try {
+      await page.waitForSelector('.a-pincode-input__input', {
+        timeout: Number(config.limits.confirm.timeout)
+      });
+    } catch {
+      this.logger.error(`Страница с вводом кода не была открыта, возможно словили ошибку`);
+    }
 
-      this.logger.info(`Отправили сообщение, ждём перед повторной отправкой ${Number(delay / 1000)} секунд`)
+    while (true) {
+      let delay = Utils.getRndInteger(config.limits.resend.min, config.limits.resend.max);
+
+      const error = await page.evaluate(() => {
+        const element = document.querySelectorAll('[data-qa-selector="error"]')[1];
+
+        if (element) {
+          return element.textContent;
+        }
+
+        return null;
+      });
+
+      if (error) {
+        this.logger.error(`Сервис выдал ошибку: ${error}`);
+
+        const banMatch = error.match(/Вы уже запросили код\. Попробуйте снова через: (\d+)/);
+
+        if (banMatch) {
+          delay = (Number(banMatch[1]) + 2) * 1000;
+          this.logger.error(`Ставим паузу на ${delay} (block)`);
+        }
+      }
+
+      this.logger.info(`Отправили сообщение, ждём перед повторной отправкой ${Number(delay / 1000)} секунд`);
       await Utils.sleep(delay);
 
       try {

@@ -1,39 +1,42 @@
 {
-	"anticaptcha": [
-		{
-			"rucaptcha": {
-				"active": false,
-				"secret": ""
-			}
-		}
-	],
-	"phones": [
-	{
-		"active": false,
-		"phone": "+300000000000"
-	},
-	{
-		"active": false,
-		"phone": "+300000000000"
-	}
-	],
-	"limits": {
-		"resend": {
-			"min": 60000,
-			"max": 90000
-		},
-		"keyboard": {
-			"delay": {
-				"min": 200,
-				"max": 500
-			}
-		}
-	},
-	"plugins": {
-		"adblock": true
-	},
-	"sites": {
-		"premier": true,
-		"tinkoff": false
-	}
+  "anticaptcha": [
+    {
+      "rucaptcha": {
+        "active": false,
+        "secret": ""
+      }
+    }
+  ],
+  "phones": [
+    {
+      "active": false,
+      "phone": "+300000000000"
+    },
+    {
+      "active": false,
+      "phone": "+300000000000"
+    }
+  ],
+  "limits": {
+    "resend": {
+      "min": 60000,
+      "max": 90000
+    },
+    "keyboard": {
+      "delay": {
+        "min": 200,
+        "max": 500
+      }
+    },
+    "confirm": {
+      "timeout": 5000
+    }
+  },
+  "plugins": {
+    "adblock": true
+  },
+  "sites": {
+    "premier": true,
+    "tinkoff": false
+  }
 }
