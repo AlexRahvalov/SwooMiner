@@ -72,7 +72,7 @@ logger.add(new winston.transports.Console({
         logger.info(result.data.solution);
 		
         await cursor.click('#code');
-        await page.type('#code', result.data.solution.text.trim().toLowerCase(), {delay: getRndInteger(200, 500)});
+        await page.type('#code', result.data.solution.text.trim().toLowerCase(), {delay: getRndInteger(config.limits.keyboard.delay.min, config.limits.keyboard.delay.max)});
         await cursor.click('[type="submit"]');
         
 		await page.waitForResponse(async (res) => {
@@ -105,17 +105,19 @@ logger.add(new winston.transports.Console({
   const stealth = StealthPlugin()
   stealth.enabledEvasions.delete('accept-language')
   puppeteer.use(stealth)
-
-  const {DEFAULT_INTERCEPT_RESOLUTION_PRIORITY} = require('puppeteer')
-  const AdblockerPlugin = require('puppeteer-extra-plugin-adblocker')
-  puppeteer.use(
-    AdblockerPlugin({
-      interceptResolutionPriority: DEFAULT_INTERCEPT_RESOLUTION_PRIORITY,
-      blockTrackers: false,
-      useCache: true,
-      blockTrackersAndAnnoyances: false
-    })
-  )
+  
+  if (config.plugins.adblock) {
+	const {DEFAULT_INTERCEPT_RESOLUTION_PRIORITY} = require('puppeteer');
+	const AdblockerPlugin = require('puppeteer-extra-plugin-adblocker')
+    puppeteer.use(
+      AdblockerPlugin({
+        interceptResolutionPriority: DEFAULT_INTERCEPT_RESOLUTION_PRIORITY,
+        blockTrackers: false,
+        useCache: true,
+        blockTrackersAndAnnoyances: false
+      });
+    )
+  }
 
   /*const browser = await puppeteer.launch({headless: false, devtools: true, args: [`
   --proxy-server=${process.env.PROXY_TYPE}://${process.env.PROXY_IP}:${process.env.PROXY_PORT},`
@@ -157,11 +159,11 @@ logger.add(new winston.transports.Console({
       document.querySelector('[data-qa-selector="phone"]').value = '';
     })
     await page.type('[data-qa-selector="phone"]', phone, {
-      delay: getRndInteger(200, 500)
+      delay: getRndInteger(config.limits.keyboard.delay.min, config.limits.keyboard.delay.max)
     });
     await cursor.click('[data-qa-selector="continue-button"]');
     while (true) {
-      await new Promise(r => setTimeout(r, getRndInteger(60 * 1000, 90 * 1000))); //  Limit the frequency of sending SMS messages from every 60 seconds to every 90 seconds. 
+      await new Promise(r => setTimeout(r, getRndInteger(config.limits.resend.min, config.limits.resend.max)));
       try {
         await page.waitForSelector('.m-code-resend__button');
         await cursor.click('.m-code-resend__button');
