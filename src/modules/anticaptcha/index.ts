@@ -1,20 +1,24 @@
 import Logger from '../logger';
 import Utils from "../utils";
+
 const config = require('../../../config.json');
 
 export default class AntiCaptcha {
   private logger = new Logger({
     service: 'anticaptcha',
   });
-  private providers: typeof config.anticaptcha = [];
+  private providers: typeof config.anticaptcha = {};
+  private keys: string[];
 
   constructor() {
     Object.keys(config.anticaptcha).forEach((key) => {
       const provider = config.anticaptcha[key];
       if (provider.active && provider.secret.length > 0) {
         try {
-          const clazz = require(`./${key}.ts`);
-          this.providers.push(new clazz.default(provider.secret));
+          const provider = require(`./${key}.ts`);
+          const clazz = new provider.default(provider.secret);
+
+          this.providers[clazz.constructor.name] = clazz;
         } catch (e) {
           console.error(e)
           this.logger.error(`Ошибка во время импорта класса антикапчи "${key}": ${JSON.stringify(e)}`);
@@ -23,6 +27,7 @@ export default class AntiCaptcha {
       }
     });
 
+    this.keys = Object.keys(this.providers);
     this.logger.info(`Загружены следующие провайдеры анти-капчи: ${this.providers.map((el) => el.constructor.name).join(', ')}`);
   }
 
@@ -31,19 +36,20 @@ export default class AntiCaptcha {
   }
 
   public process(image: string) {
-    const providerId = Utils.getRndInteger(0, this.providers.length);
+    const idx = Utils.getRndInteger(0, this.keys.length);
+    const provider = this.keys[idx];
 
     return {
-      ...this.providers[providerId].process(image),
-      provider: providerId
+      ...this.providers[provider].process(image),
+      provider: provider
     };
   }
 
-  public report(provider: number, id: number) {
+  public report(provider: string, id: number) {
     return this.providers[provider].report(id);
   }
 
-  public correct(provider: number, id: number) {
+  public correct(provider: string, id: number) {
     return this.providers[provider].correct(id);
   }
 }
