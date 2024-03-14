@@ -1,12 +1,10 @@
 {
-  "anticaptcha": [
-    {
-      "rucaptcha": {
-        "active": false,
-        "secret": ""
-      }
+  "anticaptcha": {
+    "rucaptcha": {
+      "active": false,
+      "secret": ""
     }
-  ],
+  },
   "phones": [
     {
       "active": false,
