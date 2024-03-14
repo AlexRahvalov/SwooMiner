@@ -12,15 +12,36 @@ const winston = require('winston');
 const logger = winston.createLogger({
   level: 'verbose',
   format: winston.format.json(),
-  defaultMeta: { service: 'user-service' },
   transports: [
     new winston.transports.File({ filename: `logs/${(new Date()).toLocaleDateString()}.log` }),
   ],
 });
 
+
 logger.add(new winston.transports.Console({
   format: winston.format.simple(),
 }));
+
+function error(phone, message) {
+	logger.error(message, {
+		service: 'premier.one',
+		phone
+	});
+}
+
+function info(phone, message) {
+	logger.info(message, {
+		service: 'premier.one',
+		phone
+	});
+}
+
+function verbose(phone, message) {
+	logger.verbose(message, {
+		service: 'premier.one',
+		phone
+	});
+}
 
 (async () => {
   function getRndInteger(min, max) {
@@ -58,7 +79,7 @@ logger.add(new winston.transports.Console({
 	
     let status = true;
     if (captcha.data.errorIds > 0) {
-      logger.error(captcha.data.errorDescription);
+      error(captcha.data.errorDescription);
       status = false;
     }
 
@@ -69,11 +90,11 @@ logger.add(new winston.transports.Console({
         "clientKey": config.anticaptcha.rucaptcha.secret,
         "taskId": captcha.data.taskId,
       });
-      logger.info(result.data);
+      info(result.data);
 	  
       if (result.data.status === "ready") {
         status = false;
-        logger.info(result.data.solution);
+        info(result.data.solution);
 		
         await cursor.click('#code');
         await page.type('#code', result.data.solution.text.trim().toLowerCase(), {delay: getRndInteger(config.limits.keyboard.delay.min, config.limits.keyboard.delay.max)});
@@ -81,15 +102,15 @@ logger.add(new winston.transports.Console({
         
 		await page.waitForResponse(async (res) => {
           try {
-            logger.info(res.url());
+            info(res.url());
             if (res.url() === 'https://auth.gid.ru/api/v1/sdk/web/actions/sign-in') {
               const resolve = JSON.parse(await res.text());
               
-			  logger.info(resolve.errors_description);
+			  info(resolve.errors_description);
               if (resolve.errors_description === 'Неверный код') {
                 await captcha(response, page, cursor)
               } else if (resolve.errors_description) {
-                logger.error("Error: " + resolve.errors_description);
+                error("Error: " + resolve.errors_description);
               }
             }
 			
@@ -100,7 +121,7 @@ logger.add(new winston.transports.Console({
         });
       } else if (result.data.errorId > 0) {
         status = false;
-        logger.error(result.data.errorDescription);
+        error(result.data.errorDescription);
       }
     }
   }
@@ -134,12 +155,12 @@ logger.add(new winston.transports.Console({
     //await page.authenticate({username:process.env.PROXY_LOGIN, password:process.env.PROXY_PASSWORD});
     page.on('response', async (response) => {
       try {
-        if (!response.ok()) return logger.verbose(response.url());
+        if (!response.ok()) return verbose(response.url());
         if (response.url() === 'https://auth.gid.ru/api/v1/sdk/web/users/score') {
           await captcha(response, page, cursor)
         }
       } catch (e) {
-        logger.error(e);
+        error(e);
       }
     });
     const cursor = createCursor(page);
@@ -178,7 +199,7 @@ logger.add(new winston.transports.Console({
         await page.waitForSelector('.m-code-resend__button');
         await cursor.click('.m-code-resend__button');
       } catch (e) {
-        logger.error('Cannot find the resend button.');
+        error('Cannot find the resend button.');
       }
     }
   }
