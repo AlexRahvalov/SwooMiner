@@ -1,4 +1,5 @@
 import Logger from '../logger';
+import Utils from "../utils";
 const config = require('../../../config.json');
 
 export default class AntiCaptcha {
@@ -25,15 +26,24 @@ export default class AntiCaptcha {
     this.logger.info(`Загружены следующие провайдеры анти-капчи: ${this.providers.map((el) => el.constructor.name).join(', ')}`);
   }
 
+  public hasActiveProviders() {
+    return this.providers.length > 0;
+  }
+
   public process(image: string) {
-    return this.providers[0].process(image);
+    const providerId = Utils.getRndInteger(0, this.providers.length);
+
+    return {
+      ...this.providers[providerId].process(image),
+      provider: providerId
+    };
   }
 
-  public report(id: number) {
-    return this.providers[0].report(id);
+  public report(provider: number, id: number) {
+    return this.providers[provider].report(id);
   }
 
-  public correct(id: number) {
-    return this.providers[0].correct(id);
+  public correct(provider: number, id: number) {
+    return this.providers[provider].correct(id);
   }
 }
