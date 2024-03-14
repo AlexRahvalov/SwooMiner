@@ -1,34 +1,42 @@
-import Logger from './logger';
-import Utils from './utils';
+import Logger from '../logger';
+import Utils from '../utils';
 import {BrowserContext} from "puppeteer";
 
 const {createCursor} = require("ghost-cursor");
 const UserAgent = require('user-agents');
 const config = require('../config.json');
-const logger = new Logger('premier');
 const axios = require('axios');
 
 export default class Premier {
-  private phone = '';
+  private readonly phone = '';
+
   private context: BrowserContext;
+  private logger;
 
   constructor(context, phone) {
     this.context = context;
     this.phone = phone;
 
-    this.init();
+    this.logger = new Logger({
+      service: 'premier',
+      phone: phone
+    });
+
+    this.init().catch((err) => {
+      this.logger.error(`error in premier module: ${err.message}`);
+    });
   }
 
   async init() {
-    const page = await this.context!.newPage();
+    const page = await this.context.newPage();
     page.on('response', async (response) => {
       try {
-        if (!response.ok()) return logger.verbose(this.phone, response.url());
+        if (!response.ok()) return this.logger.verbose(response.url());
         if (response.url() === 'https://auth.gid.ru/api/v1/sdk/web/users/score') {
           await this.captcha(response, page, cursor)
         }
       } catch (e: unknown) {
-        logger.error(this.phone, JSON.stringify(e));
+        this.logger.error(JSON.stringify(e));
       }
     });
     const cursor = createCursor(page);
@@ -71,7 +79,7 @@ export default class Premier {
         await page.waitForSelector('.m-code-resend__button');
         await cursor.click('.m-code-resend__button');
       } catch (e) {
-        logger.error(this.phone, 'Cannot find the resend button.');
+        this.logger.error('Cannot find the resend button.');
       }
     }
   }
@@ -103,7 +111,7 @@ export default class Premier {
 
     let status = true;
     if (captcha.data.errorIds > 0) {
-      logger.error(this.phone, captcha.data.errorDescription);
+      this.logger.error(captcha.data.errorDescription);
       status = false;
     }
 
@@ -114,11 +122,11 @@ export default class Premier {
         "clientKey": config.anticaptcha.rucaptcha.secret,
         "taskId": captcha.data.taskId,
       });
-      logger.info(this.phone, result.data);
+      this.logger.info(result.data);
 
       if (result.data.status === "ready") {
         status = false;
-        logger.info(this.phone, result.data.solution);
+        this.logger.info(result.data.solution);
 
         await cursor.click('#code');
         await page.type('#code', result.data.solution.text.trim().toLowerCase(), {delay: Utils.getRndInteger(config.limits.keyboard.delay.min, config.limits.keyboard.delay.max)});
@@ -126,15 +134,15 @@ export default class Premier {
 
         await page.waitForResponse(async (res) => {
           try {
-            logger.info(this.phone, res.url());
+            this.logger.info(res.url());
             if (res.url() === 'https://auth.gid.ru/api/v1/sdk/web/actions/sign-in') {
               const resolve = JSON.parse(await res.text());
 
-              logger.info(this.phone, resolve.errors_description);
+              this.logger.info(resolve.errors_description);
               if (resolve.errors_description === 'Неверный код') {
                 await captcha(response, page, cursor)
               } else if (resolve.errors_description) {
-                logger.error(this.phone, "Error: " + resolve.errors_description);
+                this.logger.error("Error: " + resolve.errors_description);
               }
             }
 
@@ -145,7 +153,7 @@ export default class Premier {
         });
       } else if (result.data.errorId > 0) {
         status = false;
-        logger.error(this.phone, result.data.errorDescription);
+        this.logger.error(result.data.errorDescription);
       }
     }
   }

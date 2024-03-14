@@ -6,14 +6,15 @@ export default class Logger {
   private readonly service;
   private level = 'verbose';
 
-  constructor(service = 'core') {
-    this.service = service;
-
+  constructor(meta: { service: string, phone?: string } = {
+    service: 'core'
+  }) {
     this.logger = winston.createLogger({
       level: this.level,
+      defaultMeta: meta,
       format: winston.format.json(),
       transports: [
-        new winston.transports.File({filename: `logs/${(new Date()).toLocaleDateString()}_${service}.log`}),
+        new winston.transports.File({filename: `logs/${(new Date()).toLocaleDateString()}_${meta.service}.log`}),
       ],
     });
 
@@ -21,26 +22,5 @@ export default class Logger {
     this.logger.add(new winston.transports.Console({
       format: winston.format.simple(),
     }));
-  }
-
-  error(phone, message) {
-    this.logger.error(message, {
-      service: this.service,
-      phone
-    });
-  }
-
-  info(phone, message) {
-    this.logger.info(message, {
-      service: this.service,
-      phone
-    });
-  }
-
-  verbose(phone, message) {
-    this.logger.verbose(message, {
-      service: this.service,
-      phone
-    });
   }
 }

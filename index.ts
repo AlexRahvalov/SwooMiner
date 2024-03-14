@@ -4,10 +4,12 @@ const chromium = require('chrome-aws-lambda');
 const {addExtra} = require('puppeteer-extra');
 const puppeteer = addExtra(chromium.puppeteer);
 
-import Premier from './modules/premier';
+import Premier from './modules/sites/premier';
 import Logger from './modules/logger';
 
-const logger = new Logger('core');
+const logger = new Logger({
+  service: 'core'
+});
 
 (async () => {
   const StealthPlugin = require("puppeteer-extra-plugin-stealth");
@@ -17,11 +19,11 @@ const logger = new Logger('core');
   puppeteer.use(stealth)
 
   if (config.plugins.adblock) {
-	const {DEFAULT_INTERCEPT_RESOLUTION_PRIORITY} = require('puppeteer');
+    const {DEFAULT_INTERCEPT_RESOLUTION_PRIORITY} = require('puppeteer');
 
-	const AdblockerPlugin = require('puppeteer-extra-plugin-adblocker')
+    const adblock = require('puppeteer-extra-plugin-adblocker')
     puppeteer.use(
-      AdblockerPlugin({
+      adblock({
         interceptResolutionPriority: DEFAULT_INTERCEPT_RESOLUTION_PRIORITY,
         blockTrackers: false,
         useCache: true,
@@ -33,11 +35,11 @@ const logger = new Logger('core');
   const browser = await puppeteer.launch({headless: false, devtools: true});
   const context = await browser.createIncognitoBrowserContext()
 
-  for (let idx = 0; idx < config.phones.length; idx ++) {
+  for (let idx = 0; idx < config.phones.length; idx++) {
     const phoneData = config.phones[idx];
 
-	if (phoneData.active) {
-	  new Premier(context, phoneData.phone);
-	}
+    if (phoneData.active) {
+      new Premier(context, phoneData.phone);
+    }
   }
 })();
