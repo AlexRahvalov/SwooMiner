@@ -160,7 +160,7 @@ function verbose(phone, message) {
           await captcha(response, page, cursor)
         }
       } catch (e) {
-        error(phone, e);
+        error(phone, e.message);
       }
     });
     const cursor = createCursor(page);
