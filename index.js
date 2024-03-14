@@ -6,7 +6,21 @@ const puppeteer = addExtra(chromium.puppeteer);
 const UserAgent = require('user-agents');
 const {createCursor} = require("ghost-cursor");
 const axios = require('axios');
+const winston = require('winston');
 
+
+const logger = winston.createLogger({
+  level: 'verbose',
+  format: winston.format.json(),
+  defaultMeta: { service: 'user-service' },
+  transports: [
+    new winston.transports.File({ filename: `logs/${(new Date()).toLocaleDateString()}.log` }),
+  ],
+});
+
+logger.add(new winston.transports.Console({
+  format: winston.format.simple(),
+}));
 
 (async () => {
   function getRndInteger(min, max) {
@@ -40,7 +54,7 @@ const axios = require('axios');
 	
     let status = true;
     if (captcha.data.errorIds > 0) {
-      console.error(captcha.data.errorDescription);
+      logger.error(captcha.data.errorDescription);
       status = false;
     }
 
@@ -51,11 +65,11 @@ const axios = require('axios');
         "clientKey": config.anticaptcha.rucaptcha.secret,
         "taskId": captcha.data.taskId,
       });
-      console.log(result.data);
+      logger.info(result.data);
 	  
       if (result.data.status === "ready") {
         status = false;
-        console.log(result.data.solution);
+        logger.info(result.data.solution);
 		
         await cursor.click('#code');
         await page.type('#code', result.data.solution.text.trim().toLowerCase(), {delay: getRndInteger(200, 500)});
@@ -63,15 +77,15 @@ const axios = require('axios');
         
 		await page.waitForResponse(async (res) => {
           try {
-            console.log(res.url());
+            logger.info(res.url());
             if (res.url() === 'https://auth.gid.ru/api/v1/sdk/web/actions/sign-in') {
               const resolve = JSON.parse(await res.text());
               
-			  console.log(resolve.errors_description);
+			  logger.info(resolve.errors_description);
               if (resolve.errors_description === 'Неверный код') {
                 await captcha(response, page, cursor)
               } else if (resolve.errors_description) {
-                console.error("Error: " + resolve.errors_description);
+                logger.error("Error: " + resolve.errors_description);
               }
             }
 			
@@ -82,7 +96,7 @@ const axios = require('axios');
         });
       } else if (result.data.errorId > 0) {
         status = false;
-        console.error(result.data.errorDescription);
+        logger.error(result.data.errorDescription);
       }
     }
   }
@@ -114,12 +128,12 @@ const axios = require('axios');
     //await page.authenticate({username:process.env.PROXY_LOGIN, password:process.env.PROXY_PASSWORD});
     page.on('response', async (response) => {
       try {
-        if (!response.ok()) return console.log(response.url());
+        if (!response.ok()) return logger.verbose(response.url());
         if (response.url() === 'https://auth.gid.ru/api/v1/sdk/web/users/score') {
           await captcha(response, page, cursor)
         }
       } catch (e) {
-        //console.error(e);
+        //logger.error(e);
       }
 
     });
@@ -152,7 +166,7 @@ const axios = require('axios');
         await page.waitForSelector('.m-code-resend__button');
         await cursor.click('.m-code-resend__button');
       } catch (e) {
-        console.error('Cannot find the resend button.');
+        logger.error('Cannot find the resend button.');
       }
     }
   }
