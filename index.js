@@ -52,7 +52,7 @@ function verbose(phone, message) {
     return new Promise(resolve => setTimeout(resolve, ms));
   }
 
-  async function captcha(response, page, cursor) {
+  async function captcha(phone, response, page, cursor) {
 	if (!config.anticaptcha.rucaptcha.active) {
 	  return false;
 	}
@@ -79,7 +79,7 @@ function verbose(phone, message) {
 	
     let status = true;
     if (captcha.data.errorIds > 0) {
-      error(captcha.data.errorDescription);
+      error(phone, captcha.data.errorDescription);
       status = false;
     }
 
@@ -90,11 +90,11 @@ function verbose(phone, message) {
         "clientKey": config.anticaptcha.rucaptcha.secret,
         "taskId": captcha.data.taskId,
       });
-      info(result.data);
+      info(phone, result.data);
 	  
       if (result.data.status === "ready") {
         status = false;
-        info(result.data.solution);
+        info(phone, result.data.solution);
 		
         await cursor.click('#code');
         await page.type('#code', result.data.solution.text.trim().toLowerCase(), {delay: getRndInteger(config.limits.keyboard.delay.min, config.limits.keyboard.delay.max)});
@@ -102,15 +102,15 @@ function verbose(phone, message) {
         
 		await page.waitForResponse(async (res) => {
           try {
-            info(res.url());
+            info(phone, res.url());
             if (res.url() === 'https://auth.gid.ru/api/v1/sdk/web/actions/sign-in') {
               const resolve = JSON.parse(await res.text());
               
-			  info(resolve.errors_description);
+			  info(phone, resolve.errors_description);
               if (resolve.errors_description === 'Неверный код') {
                 await captcha(response, page, cursor)
               } else if (resolve.errors_description) {
-                error("Error: " + resolve.errors_description);
+                error(phone, "Error: " + resolve.errors_description);
               }
             }
 			
@@ -121,7 +121,7 @@ function verbose(phone, message) {
         });
       } else if (result.data.errorId > 0) {
         status = false;
-        error(result.data.errorDescription);
+        error(phone, result.data.errorDescription);
       }
     }
   }
@@ -155,12 +155,12 @@ function verbose(phone, message) {
     //await page.authenticate({username:process.env.PROXY_LOGIN, password:process.env.PROXY_PASSWORD});
     page.on('response', async (response) => {
       try {
-        if (!response.ok()) return verbose(response.url());
+        if (!response.ok()) return verbose(phone, response.url());
         if (response.url() === 'https://auth.gid.ru/api/v1/sdk/web/users/score') {
           await captcha(response, page, cursor)
         }
       } catch (e) {
-        error(e);
+        error(phone, e);
       }
     });
     const cursor = createCursor(page);
@@ -199,7 +199,7 @@ function verbose(phone, message) {
         await page.waitForSelector('.m-code-resend__button');
         await cursor.click('.m-code-resend__button');
       } catch (e) {
-        error('Cannot find the resend button.');
+        error(phone, 'Cannot find the resend button.');
       }
     }
   }
