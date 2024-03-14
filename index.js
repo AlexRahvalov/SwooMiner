@@ -119,8 +119,8 @@ logger.add(new winston.transports.Console({
         blockTrackers: false,
         useCache: true,
         blockTrackersAndAnnoyances: false
-      });
-    )
+      })
+    );
   }
 
   /*const browser = await puppeteer.launch({headless: false, devtools: true, args: [`
