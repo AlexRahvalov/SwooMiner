@@ -29,5 +29,9 @@
 	},
 	"plugins": {
 		"adblock": true
+	},
+	"sites": {
+		"premier": true,
+		"tinkoff": false
 	}
 }

@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "npx ts-node index.ts"
   },
   "author": "Ximelie",
   "license": "ISC",
@@ -17,6 +17,7 @@
     "puppeteer-extra-plugin-adblocker": "^2.13.6",
     "puppeteer-extra-plugin-stealth": "^2.11.2",
     "rimraf": "^3.0.2",
+    "typescript": "^5.4.2",
     "user-agents": "^1.1.69",
     "winston": "^3.12.0"
   }
