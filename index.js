@@ -1,3 +1,5 @@
+const config = require('./config.json');
+
 const chromium = require('chrome-aws-lambda');
 const {addExtra} = require('puppeteer-extra');
 const puppeteer = addExtra(chromium.puppeteer);
@@ -19,8 +21,9 @@ const axios = require('axios');
     const data = JSON.parse(await response.text());
     const captcha_id = data.captcha_id;
     const image = data.captcha_image_base64;
-    const captcha = await axios.post('https://api.rucaptcha.com/createTask', {
-      "clientKey": "Your rucaptcha API key",  //  Paste your API key from the rucaptcha.com website
+    
+	const captcha = await axios.post('https://api.rucaptcha.com/createTask', {
+      "clientKey": config.anticaptcha.rucaptcha.secret,
       "task": {
         "type": "ImageToTextTask",
         "body": image,
@@ -33,7 +36,8 @@ const axios = require('axios');
         "comment": "введите текст, который вы видите на изображении, в нижнем регистре"
       },
       "languagePool": "ru"
-    })
+    });
+	
     let status = true;
     if (captcha.data.errorIds > 0) {
       console.error(captcha.data.errorDescription);
@@ -41,37 +45,36 @@ const axios = require('axios');
     }
 
     while (status) {
-      await sleep(1000)
+      await sleep(1000);
+	  
       const result = await axios.post('https://api.rucaptcha.com/getTaskResult', {
-        "clientKey": "Your rucaptcha API key",  //  Paste your API key from the rucaptcha.com website
+        "clientKey": config.anticaptcha.rucaptcha.secret,
         "taskId": captcha.data.taskId,
-      })
-      console.log(result.data)
-      if (result.data.status === "processing") {
-      } else if (result.data.status === "ready") {
+      });
+      console.log(result.data);
+	  
+      if (result.data.status === "ready") {
         status = false;
         console.log(result.data.solution);
+		
         await cursor.click('#code');
         await page.type('#code', result.data.solution.text.trim().toLowerCase(), {delay: getRndInteger(200, 500)});
         await cursor.click('[type="submit"]');
-        await page.waitForResponse(async (res) => {
+        
+		await page.waitForResponse(async (res) => {
           try {
             console.log(res.url());
             if (res.url() === 'https://auth.gid.ru/api/v1/sdk/web/actions/sign-in') {
-              console.log(await res.text());
               const resolve = JSON.parse(await res.text());
               
+			  console.log(resolve.errors_description);
               if (resolve.errors_description === 'Неверный код') {
-                axios.post('https://api.rucaptcha.com/reportIncorrect', {
-                  "clientKey": "Your rucaptcha API key",  //  Paste your API key from the rucaptcha.com website
-                  "taskId": captcha.data.taskId,
-                });
                 await captcha(response, page, cursor)
-                console.log(resolve.errors_description)
               } else if (resolve.errors_description) {
                 console.error("Error: " + resolve.errors_description);
               }
             }
+			
             return true;
           } catch (error) {
             return false;
@@ -153,5 +156,12 @@ const axios = require('axios');
       }
     }
   }
-  sendsms('Your phone number');
+  
+  for (let idx = 0; idx < config.phones.length; idx ++) {
+    const phoneData = config.phones[idx];
+	
+	if (phoneData.active) {
+      sendsms(phoneData.phone);
+	}
+  }
 })();

@@ -1,0 +1,18 @@
+{
+	"anticaptcha": {
+		"rucaptcha": {
+			"active": false,
+			"secret": ""
+		}
+	},
+	"phones": [
+	{
+		"active": false,
+		"phone": "+300000000000"
+	},
+	{
+		"active": false,
+		"phone": "+300000000000"
+	}
+	]
+}
