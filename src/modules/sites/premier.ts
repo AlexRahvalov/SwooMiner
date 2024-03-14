@@ -114,6 +114,12 @@ export default class Premier {
   }
 
   async captcha(response, page, cursor) {
+    if (!global.AntiCaptcha.hasActiveProviders()) {
+      this.logger.error(`Нет активных провайдеров анти-капчти, введите капчу вручную`);
+
+      return;
+    }
+
     const data = JSON.parse(await response.text());
     const captcha_id = data.captcha_id;
     const image = data.captcha_image_base64;
@@ -138,14 +144,14 @@ export default class Premier {
 
           if (resolve.errors_description === 'Неверный код') {
             this.logger.error(`Неверная капча, пробуем снова...`);
-            global.AntiCaptcha.report(solve.id);
+            global.AntiCaptcha.report(solve.provider, solve.id);
 
             return this.captcha(response, page, cursor);
           } else if (resolve.errors_description) {
             this.logger.error("Error: " + resolve.errors_description);
           } else if (!resolve.errors_description) {
             this.logger.info(`Капча верная, отправляем информацию агрегатору`);
-            global.AntiCaptcha.correct(solve.id);
+            global.AntiCaptcha.correct(solve.provider, solve.id);
           }
         }
 
