@@ -14,5 +14,20 @@
 		"active": false,
 		"phone": "+300000000000"
 	}
-	]
+	],
+	"limits": {
+		"resend": {
+			"min": 60000,
+			"max": 90000
+		},
+		"keyboard": {
+			"delay": {
+				"min": 200,
+				"max": 500
+			}
+		}
+	},
+	"plugins": {
+		"adblock": true
+	}
 }
