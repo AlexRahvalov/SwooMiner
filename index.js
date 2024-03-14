@@ -32,6 +32,10 @@ logger.add(new winston.transports.Console({
   }
 
   async function captcha(response, page, cursor) {
+	if (!config.anticaptcha.rucaptcha.active) {
+	  return false;
+	}
+	
     const data = JSON.parse(await response.text());
     const captcha_id = data.captcha_id;
     const image = data.captcha_image_base64;
@@ -135,9 +139,8 @@ logger.add(new winston.transports.Console({
           await captcha(response, page, cursor)
         }
       } catch (e) {
-        //logger.error(e);
+        logger.error(e);
       }
-
     });
     const cursor = createCursor(page);
     cursor.toggleRandomMove(true);
@@ -151,18 +154,25 @@ logger.add(new winston.transports.Console({
     await page.setUserAgent(new UserAgent({
       deviceCategory: 'desktop'
     }).toString());
+	
     await page.goto('https://premier.one/', {waitUntil: "domcontentloaded"});
-    await page.waitForSelector('.a-button.a-button--secondary.a-button--small.a-button--left.a-button.w-header__button-login.w-header__buttons-item');
+    
+	await page.waitForSelector('.a-button.a-button--secondary.a-button--small.a-button--left.a-button.w-header__button-login.w-header__buttons-item');
     await cursor.click('.a-button.a-button--secondary.a-button--small.a-button--left.a-button.w-header__button-login.w-header__buttons-item');
-    await page.waitForSelector('[data-qa-selector="phone"]');
-    await page.evaluate(() => {
+    
+	await page.waitForSelector('[data-qa-selector="phone"]');
+    
+	await page.evaluate(() => {
       document.querySelector('[data-qa-selector="phone"]').value = '';
     })
-    await page.type('[data-qa-selector="phone"]', phone, {
+    
+	await page.type('[data-qa-selector="phone"]', phone, {
       delay: getRndInteger(config.limits.keyboard.delay.min, config.limits.keyboard.delay.max)
     });
-    await cursor.click('[data-qa-selector="continue-button"]');
-    while (true) {
+    
+	await cursor.click('[data-qa-selector="continue-button"]');
+    
+	while (true) {
       await new Promise(r => setTimeout(r, getRndInteger(config.limits.resend.min, config.limits.resend.max)));
       try {
         await page.waitForSelector('.m-code-resend__button');
