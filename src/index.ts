@@ -7,6 +7,7 @@ global.AntiCaptcha = new AntiCaptcha();
 
 import Logger from './modules/logger';
 import Tinkoff from "./modules/sites/tinkoff";
+
 const logger = new Logger({
   service: 'core'
 });
@@ -44,43 +45,45 @@ const AdmZip = require("adm-zip");
     const phoneData = global.config.phones[idx];
 
     if (phoneData.active) {
-      const sites: (typeof Premier | typeof Tinkoff)[] = [];
-
-      if (global.config.sites.premier) {
-        sites.push(Premier);
-      }
-
-      if (global.config.sites.tinkoff) {
-        sites.push(Tinkoff);
-      }
-
-      sites.forEach((clazz) => {
-        const instance = new clazz(context, phoneData.phone);
-
-        instance.init().catch(async (err) => {
-          instance.logger.error(`Ошибка во время навигации по сайту. Создание отчёта об ошибке`);
-
-          const screenshot = await instance.page?.screenshot({
-            fullPage: true,
-            type: 'jpeg',
-            quality: 100
-          });
-
-          const zip = new AdmZip();
-          await zip.addFile('error.bin', Buffer.from(JSON.stringify(err), 'utf8'));
-          if (screenshot) {
-            await zip.addFile('img.jpg', screenshot);
-          }
-          await zip.addLocalFolderPromise('./logs', {
-            zipPath: '/logs'
-          });
-          zip.writeZip("./report.zip");
-
-          instance.logger.error(`Отчёт создан: report.zip. Отправьте его разработчику для исправления ошибки!`);
-
-          instance.page?.close();
-        });
-      });
+      continue;
     }
+
+    const sites: (typeof Premier | typeof Tinkoff)[] = [];
+
+    if (global.config.sites.premier) {
+      sites.push(Premier);
+    }
+
+    if (global.config.sites.tinkoff) {
+      sites.push(Tinkoff);
+    }
+
+    sites.forEach((clazz) => {
+      const instance = new clazz(context, phoneData.phone);
+
+      instance.init().catch(async (err) => {
+        instance.logger.error(`Ошибка во время навигации по сайту. Создание отчёта об ошибке`);
+
+        const screenshot = await instance.page?.screenshot({
+          fullPage: true,
+          type: 'jpeg',
+          quality: 100
+        });
+
+        const zip = new AdmZip();
+        await zip.addFile('error.bin', Buffer.from(JSON.stringify(err), 'utf8'));
+        if (screenshot) {
+          await zip.addFile('img.jpg', screenshot);
+        }
+        await zip.addLocalFolderPromise('./logs', {
+          zipPath: '/logs'
+        });
+        zip.writeZip("./report.zip");
+
+        instance.logger.error(`Отчёт создан: report.zip. Отправьте его разработчику для исправления ошибки!`);
+
+        instance.page?.close();
+      });
+    });
   }
 })();
