@@ -9,6 +9,7 @@
   "author": "Ximelie",
   "license": "ISC",
   "dependencies": {
+    "adm-zip": "^0.5.12",
     "axios": "^1.6.3",
     "chrome-aws-lambda": "^9.1.0",
     "ghost-cursor": "^1.1.19",
@@ -20,5 +21,8 @@
     "typescript": "^5.4.2",
     "user-agents": "^1.1.69",
     "winston": "^3.12.0"
+  },
+  "devDependencies": {
+    "@types/adm-zip": "^0.5.5"
   }
 }
