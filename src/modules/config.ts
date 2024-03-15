@@ -6,7 +6,7 @@ export default class Config {
     service: 'config'
   });
   private readonly config;
-  private readonly version = 0.01;
+  private readonly version = 0.02;
 
   constructor() {
     try {
@@ -19,7 +19,7 @@ export default class Config {
         this.logger.error(`[Config] ${error}`);
         process.exit(1);
       }
-    } catch {
+    } catch (e) {
       fs.copyFileSync('./config.example.json', './config.json');
 
       this.logger.error(`Новый файл конфигурации config.json был создан. Настойте его перед запуском скрипта`);
@@ -49,11 +49,19 @@ export default class Config {
     }
 
     if (typeof this.config.sites.premier !== 'boolean') {
-      return 'sites.premier is not bool'
+      return 'sites.premier is not bool';
     }
 
     if (typeof this.config.sites.tinkoff !== 'boolean') {
-      return 'sites.tinkoff is not bool'
+      return 'sites.tinkoff is not bool';
+    }
+
+    if (typeof this.config.browser.hide !== 'boolean') {
+      return 'browser.hide is not bool';
+    }
+
+    if (typeof this.config.browser.devtools !== 'boolean') {
+      return 'browser.devtools is not bool';
     }
 
     return null;
@@ -64,8 +72,21 @@ export default class Config {
   }
 
   migrate() {
-    switch(this.config.version) {
-
+    if (this.version === this.config.version) {
+      return;
     }
+
+    this.logger.info(`Миграция конфигурации ${this.config.version} > ${this.version}`);
+
+    if (this.config.version < 0.02) {
+      this.config.browser = {
+        hide: false,
+        devtools: false
+      };
+    }
+
+    this.config.version = this.version;
+
+    fs.writeFileSync('./config.json', JSON.stringify(this.config, null, 2));
   }
 }

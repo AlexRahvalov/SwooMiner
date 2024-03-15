@@ -35,7 +35,7 @@ const puppeteer = addExtra(chromium.puppeteer);
     );
   }
 
-  const browser = await puppeteer.launch({headless: false, devtools: true});
+  const browser = await puppeteer.launch({headless: global.config.browser.hide, devtools: global.config.browser.devtools});
   const context = await browser.createIncognitoBrowserContext();
 
   for (let idx = 0; idx < global.config.phones.length; idx++) {
