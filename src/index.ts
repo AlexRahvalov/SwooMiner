@@ -44,7 +44,7 @@ const AdmZip = require("adm-zip");
   for (let idx = 0; idx < global.config.phones.length; idx++) {
     const phoneData = global.config.phones[idx];
 
-    if (phoneData.active) {
+    if (!phoneData.active) {
       continue;
     }
 
