@@ -1,9 +1,11 @@
 import Logger from '../logger';
 import Utils from '../utils';
 import {BrowserContext} from "puppeteer";
+import * as fs from "fs";
 
 const {createCursor} = require("ghost-cursor");
 const UserAgent = require('user-agents');
+const AdmZip = require("adm-zip");
 
 export default class Premier {
   private readonly phone = '';
@@ -47,33 +49,62 @@ export default class Premier {
       deviceCategory: 'desktop'
     }).toString());
 
-    await page.goto('https://premier.one/', {waitUntil: "domcontentloaded"});
-
-    await page.waitForSelector('.a-button.a-button--secondary.a-button--small.a-button--left.a-button.w-header__button-login.w-header__buttons-item');
-    await cursor.click('.a-button.a-button--secondary.a-button--small.a-button--left.a-button.w-header__button-login.w-header__buttons-item');
-
-    await page.waitForSelector('[data-qa-selector="phone"]');
-
-    await page.evaluate(() => {
-      const element: HTMLInputElement | null = document.querySelector('[data-qa-selector="phone"]');
-
-      if (element) {
-        element.value = '';
-      }
-    });
-
-    await page.type('[data-qa-selector="phone"]', this.phone, {
-      delay: Utils.getRndInteger(global.config.limits.keyboard.delay.min, global.config.limits.keyboard.delay.max)
-    });
-
-    await cursor.click('[data-qa-selector="continue-button"]');
-
     try {
-      await page.waitForSelector('.a-pincode-input__input', {
-        timeout: Number(global.config.limits.confirm.timeout)
+      await page.goto('https://premier.one/', {waitUntil: "domcontentloaded"});
+
+      await page.waitForSelector('.a-button.a-button--secondary.a-button--small.a-button--left.a-button.w-header__button-login.w-header__buttons-item');
+      await cursor.click('.a-button.a-button--secondary.a-button--small.a-button--left.a-button.w-header__button-login.w-header__buttons-item');
+
+      await page.waitForSelector('[data-qa-selector="phone"]');
+
+      await page.evaluate(() => {
+        const element: HTMLInputElement | null = document.querySelector('[data-qa-selector="phone"]');
+
+        if (element) {
+          element.value = '';
+        }
       });
-    } catch {
-      this.logger.error(`Страница с вводом кода не была открыта, возможно словили ошибку`);
+
+      await page.type('[data-qa-selector="phone"]', this.phone, {
+        delay: Utils.getRndInteger(global.config.limits.keyboard.delay.min, global.config.limits.keyboard.delay.max)
+      });
+
+      await cursor.click('[data-qa-selector="continue-button"]');
+
+      try {
+        await page.waitForSelector('.a-pincode-input__input', {
+          timeout: Number(global.config.limits.confirm.timeout)
+        });
+      } catch {
+        this.logger.error(`Страница с вводом кода не была открыта, возможно словили ошибку`);
+      }
+    } catch (e) {
+      this.logger.error(`Ошибка во время навигации по сайту. Создание отчёта об ошибке`);
+
+      fs.mkdirSync('./report');
+
+      await page.screenshot({
+        fullPage: true,
+        type: 'jpeg',
+        quality: 100,
+        path: './report/img.jpg'
+      });
+
+      const zip = new AdmZip();
+      await zip.addFile('error.bin', Buffer.from(JSON.stringify(e), 'utf8'));
+      await zip.addLocalFolderPromise("./report");
+      await zip.addLocalFolderPromise('./logs', {
+        zipPath: '/logs'
+      });
+      zip.writeZip("./report.zip");
+
+      fs.rmSync('./report', {
+        recursive: true,
+        force: true
+      });
+
+      this.logger.error(`Отчёт создан: report.zip. Отправьте его разработчику для исправления ошибки!`);
+      process.exit(1);
     }
 
     while (true) {
