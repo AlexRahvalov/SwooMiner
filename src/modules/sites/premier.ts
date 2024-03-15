@@ -1,6 +1,6 @@
 import Logger from '../logger';
 import Utils from '../utils';
-import {BrowserContext} from "puppeteer";
+import {BrowserContext, Page} from "puppeteer";
 import * as fs from "fs";
 
 const {createCursor} = require("ghost-cursor");
@@ -11,6 +11,8 @@ export default class Premier {
   private readonly phone = '';
 
   private context: BrowserContext;
+  private page: Page | null = null;
+
   private logger;
 
   constructor(context, phone) {
@@ -22,68 +24,12 @@ export default class Premier {
       phone: phone
     });
 
-    this.init().catch((err) => {
-      this.logger.error(`error in premier module: ${err.message}`);
-    });
-  }
-
-  async init() {
-    const page = await this.context.newPage();
-    page.on('response', async (response) => {
-      try {
-        if (!response.ok()) return this.logger.debug(`Запрос ${response.url()} неуспешен`);
-        if (response.url() === 'https://auth.gid.ru/api/v1/sdk/web/users/score') {
-          await this.captcha(response, page, cursor)
-        }
-      } catch { }
-    });
-    const cursor = createCursor(page);
-    cursor.toggleRandomMove(true);
-    await page.setExtraHTTPHeaders({
-      'accept-encoding': 'gzip, deflate, br',
-      'accept-language': 'ru-RU,ru;q=0.9,en-US;q=0.8,en;q=0.7,uk;q=0.6',
-      'DNT': '1'
-    });
-
-    await page.setUserAgent(new UserAgent({
-      deviceCategory: 'desktop'
-    }).toString());
-
-    try {
-      await page.goto('https://premier.one/', {waitUntil: "domcontentloaded"});
-
-      await page.waitForSelector('.a-button.a-button--secondary.a-button--small.a-button--left.a-button.w-header__button-login.w-header__buttons-item');
-      await cursor.click('.a-button.a-button--secondary.a-button--small.a-button--left.a-button.w-header__button-login.w-header__buttons-item');
-
-      await page.waitForSelector('[data-qa-selector="phone"]');
-
-      await page.evaluate(() => {
-        const element: HTMLInputElement | null = document.querySelector('[data-qa-selector="phone"]');
-
-        if (element) {
-          element.value = '';
-        }
-      });
-
-      await page.type('[data-qa-selector="phone"]', this.phone, {
-        delay: Utils.getRndInteger(global.config.limits.keyboard.delay.min, global.config.limits.keyboard.delay.max)
-      });
-
-      await cursor.click('[data-qa-selector="continue-button"]');
-
-      try {
-        await page.waitForSelector('.a-pincode-input__input', {
-          timeout: Number(global.config.limits.confirm.timeout)
-        });
-      } catch {
-        this.logger.error(`Страница с вводом кода не была открыта, возможно словили ошибку`);
-      }
-    } catch (e) {
+    this.init().catch(async (err) => {
       this.logger.error(`Ошибка во время навигации по сайту. Создание отчёта об ошибке`);
 
       fs.mkdirSync('./report');
 
-      await page.screenshot({
+      await this.page?.screenshot({
         fullPage: true,
         type: 'jpeg',
         quality: 100,
@@ -91,7 +37,7 @@ export default class Premier {
       });
 
       const zip = new AdmZip();
-      await zip.addFile('error.bin', Buffer.from(JSON.stringify(e), 'utf8'));
+      await zip.addFile('error.bin', Buffer.from(JSON.stringify(err), 'utf8'));
       await zip.addLocalFolderPromise("./report");
       await zip.addLocalFolderPromise('./logs', {
         zipPath: '/logs'
@@ -105,12 +51,64 @@ export default class Premier {
 
       this.logger.error(`Отчёт создан: report.zip. Отправьте его разработчику для исправления ошибки!`);
       process.exit(1);
+    });
+  }
+
+  async init() {
+    this.page = await this.context.newPage();
+    this.page.on('response', async (response) => {
+      try {
+        if (!response.ok()) return this.logger.debug(`Запрос ${response.url()} неуспешен`);
+        if (response.url() === 'https://auth.gid.ru/api/v1/sdk/web/users/score') {
+          await this.captcha(response, this.page, cursor)
+        }
+      } catch { }
+    });
+    const cursor = createCursor(this.page);
+    cursor.toggleRandomMove(true);
+    await this.page.setExtraHTTPHeaders({
+      'accept-encoding': 'gzip, deflate, br',
+      'accept-language': 'ru-RU,ru;q=0.9,en-US;q=0.8,en;q=0.7,uk;q=0.6',
+      'DNT': '1'
+    });
+
+    await this.page.setUserAgent(new UserAgent({
+      deviceCategory: 'desktop'
+    }).toString());
+
+    await this.page.goto('https://premier.one/', {waitUntil: "domcontentloaded"});
+
+    await this.page.waitForSelector('.a-button.a-button--secondary.a-button--small.a-button--left.a-button.w-header__button-login.w-header__buttons-item');
+    await cursor.click('.a-button.a-button--secondary.a-button--small.a-button--left.a-button.w-header__button-login.w-header__buttons-item');
+
+    await this.page.waitForSelector('[data-qa-selector="phone"]');
+
+    await this.page.evaluate(() => {
+      const element: HTMLInputElement | null = document.querySelector('[data-qa-selector="phone"]');
+
+      if (element) {
+        element.value = '';
+      }
+    });
+
+    await this.page.type('[data-qa-selector="phone"]', this.phone, {
+      delay: Utils.getRndInteger(global.config.limits.keyboard.delay.min, global.config.limits.keyboard.delay.max)
+    });
+
+    await cursor.click('[data-qa-selector="continue-button"]');
+
+    try {
+      await this.page.waitForSelector('.a-pincode-input__input', {
+        timeout: Number(global.config.limits.confirm.timeout)
+      });
+    } catch {
+      this.logger.error(`Страница с вводом кода не была открыта, возможно словили ошибку`);
     }
 
     while (true) {
       let delay = Utils.getRndInteger(global.config.limits.resend.min, global.config.limits.resend.max);
 
-      const error = await page.evaluate(() => {
+      const error = await this.page.evaluate(() => {
         const element = document.querySelectorAll('[data-qa-selector="error"]')[1];
 
         if (element) {
@@ -135,7 +133,7 @@ export default class Premier {
       await Utils.sleep(delay);
 
       try {
-        await page.waitForSelector('.m-code-resend__button');
+        await this.page.waitForSelector('.m-code-resend__button');
         await cursor.click('.m-code-resend__button');
       } catch (e) {
         this.logger.error('Не могу найти кнопку переотправки сообщения');

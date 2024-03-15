@@ -6,7 +6,7 @@ export default class AntiCaptcha {
     service: 'anticaptcha',
   });
   private providers: typeof global.config.anticaptcha = {};
-  private keys: string[];
+  private readonly keys: string[];
 
   constructor() {
     Object.keys(global.config.anticaptcha).forEach((key) => {
