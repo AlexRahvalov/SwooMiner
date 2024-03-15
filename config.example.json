@@ -1,5 +1,5 @@
 {
-  "version": 0.01,
+  "version": 0.02,
   "anticaptcha": {
     "rucaptcha": {
       "active": false,
@@ -37,5 +37,9 @@
   "sites": {
     "premier": true,
     "tinkoff": false
+  },
+  "browser": {
+    "hide": false,
+    "devtools": false
   }
 }
