@@ -50,40 +50,7 @@ export default class Premier extends BaseSite {
       this.logger.error(`Страница с вводом кода не была открыта, возможно словили ошибку`);
     }
 
-    while (!this.page.isClosed()) {
-      let delay = Utils.getRndInteger(global.config.limits.resend.min, global.config.limits.resend.max);
-
-      const error = await this.page.evaluate(() => {
-        const element = document.querySelectorAll('[data-qa-selector="error"]')[1];
-
-        if (element) {
-          return element.textContent;
-        }
-
-        return null;
-      });
-
-      if (error) {
-        this.logger.error(`Сервис выдал ошибку: ${error}`);
-
-        const banMatch = error.match(/Вы уже запросили код\. Попробуйте снова через: (\d+)/);
-
-        if (banMatch) {
-          delay = (Number(banMatch[1]) + 2) * 1000;
-          this.logger.error(`Ставим паузу на ${delay} (block)`);
-        }
-      }
-
-      this.logger.info(`Отправили сообщение, ждём перед повторной отправкой ${Number(delay / 1000)} секунд`);
-      await Utils.sleep(delay);
-
-      try {
-        await this.page.waitForSelector('.m-code-resend__button');
-        await this.cursor.click('.m-code-resend__button');
-      } catch (e) {
-        this.logger.error('Не могу найти кнопку переотправки сообщения');
-      }
-    }
+    setTimeout(this.resend, await this.getDelay());
   }
 
   async captcha(response, page, cursor) {
@@ -135,5 +102,48 @@ export default class Premier extends BaseSite {
         return false;
       }
     });
+  }
+
+  async getDelay() {
+    let delay = Utils.getRndInteger(global.config.limits.resend.min, global.config.limits.resend.max);
+
+    const error = await this.page!.evaluate(() => {
+      const element = document.querySelectorAll('[data-qa-selector="error"]')[1];
+
+      if (element) {
+        return element.textContent;
+      }
+
+      return null;
+    });
+
+    if (error) {
+      this.logger.error(`Сервис выдал ошибку: ${error}`);
+
+      const banMatch = error.match(/Вы уже запросили код\. Попробуйте снова через: (\d+)/);
+
+      if (banMatch) {
+        delay = (Number(banMatch[1]) + 2) * 1000;
+        this.logger.error(`Ставим паузу на ${delay} (block)`);
+      }
+    }
+
+    this.logger.info(`Отправили сообщение, ждём перед повторной отправкой ${Number(delay / 1000)} секунд`);
+    return delay;
+  }
+
+  async resend() {
+    if (this.page?.isClosed()) {
+      return;
+    }
+
+    try {
+      await this.page!.waitForSelector('.m-code-resend__button');
+      await this.cursor!.click('.m-code-resend__button');
+    } catch (e) {
+      this.logger.error('Не могу найти кнопку переотправки сообщения');
+    }
+
+    setTimeout(this.resend, await this.getDelay());
   }
 }
