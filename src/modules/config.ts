@@ -1,4 +1,5 @@
 import Logger from './logger';
+import * as fs from "fs";
 
 export default class Config {
   private logger = new Logger({
@@ -9,7 +10,7 @@ export default class Config {
 
   constructor() {
     try {
-      this.config = require('../../config');
+      this.config = require('../../config.json');
 
       this.migrate();
 
@@ -19,7 +20,9 @@ export default class Config {
         process.exit(1);
       }
     } catch {
-      this.logger.error(`Файл конфигурации config.json не найден`);
+      fs.copyFileSync('./config.example.json', './config.json');
+
+      this.logger.error(`Новый файл конфигурации config.json был создан. Настойте его перед запуском скрипта`);
       process.exit(1);
     }
   }
