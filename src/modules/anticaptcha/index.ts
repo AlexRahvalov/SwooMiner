@@ -1,18 +1,16 @@
 import Logger from '../logger';
 import Utils from "../utils";
 
-const config = require('../../../config.json');
-
 export default class AntiCaptcha {
   private logger = new Logger({
     service: 'anticaptcha',
   });
-  private providers: typeof config.anticaptcha = {};
+  private providers: typeof global.config.anticaptcha = {};
   private keys: string[];
 
   constructor() {
-    Object.keys(config.anticaptcha).forEach((key) => {
-      const provider = config.anticaptcha[key];
+    Object.keys(global.config.anticaptcha).forEach((key) => {
+      const provider = global.config.anticaptcha[key];
       if (provider.active && provider.secret.length > 0) {
         try {
           const provider = require(`./${key}.ts`);
@@ -28,7 +26,7 @@ export default class AntiCaptcha {
     });
 
     this.keys = Object.keys(this.providers);
-    this.logger.info(`Загружены следующие провайдеры анти-капчи: ${this.providers.map((el) => el.constructor.name).join(', ')}`);
+    this.logger.info(`Загружены следующие провайдеры анти-капчи: ${this.keys.join(', ')}`);
   }
 
   public hasActiveProviders() {

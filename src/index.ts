@@ -1,19 +1,18 @@
+import Premier from './modules/sites/premier';
 import AntiCaptcha from "./modules/anticaptcha";
+import Config from "./modules/config";
 
-const config = require('../config.json');
+global.config = new Config().get();
+global.AntiCaptcha = new AntiCaptcha();
+
+import Logger from './modules/logger';
+const logger = new Logger({
+  service: 'core'
+});
 
 const chromium = require('chrome-aws-lambda');
 const {addExtra} = require('puppeteer-extra');
 const puppeteer = addExtra(chromium.puppeteer);
-
-import Premier from './modules/sites/premier';
-import Logger from './modules/logger';
-
-global.AntiCaptcha = new AntiCaptcha();
-
-const logger = new Logger({
-  service: 'core'
-});
 
 (async () => {
   const StealthPlugin = require("puppeteer-extra-plugin-stealth");
@@ -22,7 +21,7 @@ const logger = new Logger({
   stealth.enabledEvasions.delete('accept-language');
   puppeteer.use(stealth)
 
-  if (config.plugins.adblock) {
+  if (global.config.plugins.adblock) {
     const {DEFAULT_INTERCEPT_RESOLUTION_PRIORITY} = require('puppeteer');
 
     const adblock = require('puppeteer-extra-plugin-adblocker');
@@ -39,8 +38,8 @@ const logger = new Logger({
   const browser = await puppeteer.launch({headless: false, devtools: true});
   const context = await browser.createIncognitoBrowserContext();
 
-  for (let idx = 0; idx < config.phones.length; idx++) {
-    const phoneData = config.phones[idx];
+  for (let idx = 0; idx < global.config.phones.length; idx++) {
+    const phoneData = global.config.phones[idx];
 
     if (phoneData.active) {
       new Premier(context, phoneData.phone);

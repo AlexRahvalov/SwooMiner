@@ -4,7 +4,6 @@ import {BrowserContext} from "puppeteer";
 
 const {createCursor} = require("ghost-cursor");
 const UserAgent = require('user-agents');
-const config = require('../../../config.json');
 
 export default class Premier {
   private readonly phone = '';
@@ -64,21 +63,21 @@ export default class Premier {
     });
 
     await page.type('[data-qa-selector="phone"]', this.phone, {
-      delay: Utils.getRndInteger(config.limits.keyboard.delay.min, config.limits.keyboard.delay.max)
+      delay: Utils.getRndInteger(global.config.limits.keyboard.delay.min, global.config.limits.keyboard.delay.max)
     });
 
     await cursor.click('[data-qa-selector="continue-button"]');
 
     try {
       await page.waitForSelector('.a-pincode-input__input', {
-        timeout: Number(config.limits.confirm.timeout)
+        timeout: Number(global.config.limits.confirm.timeout)
       });
     } catch {
       this.logger.error(`Страница с вводом кода не была открыта, возможно словили ошибку`);
     }
 
     while (true) {
-      let delay = Utils.getRndInteger(config.limits.resend.min, config.limits.resend.max);
+      let delay = Utils.getRndInteger(global.config.limits.resend.min, global.config.limits.resend.max);
 
       const error = await page.evaluate(() => {
         const element = document.querySelectorAll('[data-qa-selector="error"]')[1];
@@ -134,7 +133,7 @@ export default class Premier {
     this.logger.verbose(`Получен ответ от сервиса анти-капчи: ${JSON.stringify(solve)}`);
 
     await cursor.click('#code');
-    await page.type('#code', solve.text, {delay: Utils.getRndInteger(config.limits.keyboard.delay.min, config.limits.keyboard.delay.max)});
+    await page.type('#code', solve.text, {delay: Utils.getRndInteger(global.config.limits.keyboard.delay.min, global.config.limits.keyboard.delay.max)});
     await cursor.click('[type="submit"]');
 
     return await page.waitForResponse(async (res) => {
