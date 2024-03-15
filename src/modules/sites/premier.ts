@@ -44,7 +44,8 @@ export default class Premier {
       zip.writeZip("./report.zip");
 
       this.logger.error(`Отчёт создан: report.zip. Отправьте его разработчику для исправления ошибки!`);
-      process.exit(1);
+
+      this.page?.close();
     });
   }
 
@@ -99,7 +100,7 @@ export default class Premier {
       this.logger.error(`Страница с вводом кода не была открыта, возможно словили ошибку`);
     }
 
-    while (true) {
+    while (!this.page.isClosed()) {
       let delay = Utils.getRndInteger(global.config.limits.resend.min, global.config.limits.resend.max);
 
       const error = await this.page.evaluate(() => {
