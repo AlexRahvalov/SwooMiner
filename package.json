@@ -4,6 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
+    "build": "npx tsc",
     "start": "npx ts-node src/index.ts"
   },
   "author": "Ximelie",

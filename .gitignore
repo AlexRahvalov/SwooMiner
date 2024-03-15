@@ -3,3 +3,4 @@
 SwooMiner vv0.0.1.zip
 config.json
 /logs/*.log
+/dist/
