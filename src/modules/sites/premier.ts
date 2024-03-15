@@ -50,7 +50,7 @@ export default class Premier extends BaseSite {
       this.logger.error(`Страница с вводом кода не была открыта, возможно словили ошибку`);
     }
 
-    setTimeout(this.resend, await this.getDelay());
+    setTimeout(this.resend.bind(this), await this.getDelay());
   }
 
   async captcha(response, page, cursor) {
@@ -144,6 +144,6 @@ export default class Premier extends BaseSite {
       this.logger.error('Не могу найти кнопку переотправки сообщения');
     }
 
-    setTimeout(this.resend, await this.getDelay());
+    setTimeout(this.resend.bind(this), await this.getDelay());
   }
 }
