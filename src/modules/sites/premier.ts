@@ -1,80 +1,30 @@
-import Logger from '../logger';
 import Utils from '../utils';
-import {BrowserContext, Page} from "puppeteer";
-import * as fs from "fs";
+import BaseSite from "./base";
 
-const {createCursor} = require("ghost-cursor");
-const UserAgent = require('user-agents');
-const AdmZip = require("adm-zip");
-
-export default class Premier {
-  private readonly phone = '';
-
-  private context: BrowserContext;
-  private page: Page | null = null;
-
-  private logger;
-
+export default class Premier extends BaseSite {
   constructor(context, phone) {
-    this.context = context;
-    this.phone = phone;
-
-    this.logger = new Logger({
-      service: 'premier',
-      phone: phone
-    });
-
-    this.init().catch(async (err) => {
-      this.logger.error(`Ошибка во время навигации по сайту. Создание отчёта об ошибке`);
-
-      const screenshot = await this.page?.screenshot({
-        fullPage: true,
-        type: 'jpeg',
-        quality: 100
-      });
-
-      const zip = new AdmZip();
-      await zip.addFile('error.bin', Buffer.from(JSON.stringify(err), 'utf8'));
-      if (screenshot) {
-        await zip.addFile('img.jpg', screenshot);
-      }
-      await zip.addLocalFolderPromise('./logs', {
-        zipPath: '/logs'
-      });
-      zip.writeZip("./report.zip");
-
-      this.logger.error(`Отчёт создан: report.zip. Отправьте его разработчику для исправления ошибки!`);
-
-      this.page?.close();
-    });
+    super(context, phone);
   }
 
   async init() {
-    this.page = await this.context.newPage();
+    await super.init();
+
+    if (!this.page || !this.cursor) {
+      return;
+    }
+
     this.page.on('response', async (response) => {
       try {
-        if (!response.ok()) return this.logger.debug(`Запрос ${response.url()} неуспешен`);
         if (response.url() === 'https://auth.gid.ru/api/v1/sdk/web/users/score') {
-          await this.captcha(response, this.page, cursor)
+          await this.captcha(response, this.page, this.cursor)
         }
       } catch { }
     });
-    const cursor = createCursor(this.page);
-    cursor.toggleRandomMove(true);
-    await this.page.setExtraHTTPHeaders({
-      'accept-encoding': 'gzip, deflate, br',
-      'accept-language': 'ru-RU,ru;q=0.9,en-US;q=0.8,en;q=0.7,uk;q=0.6',
-      'DNT': '1'
-    });
-
-    await this.page.setUserAgent(new UserAgent({
-      deviceCategory: 'desktop'
-    }).toString());
 
     await this.page.goto('https://premier.one/', {waitUntil: "domcontentloaded"});
 
     await this.page.waitForSelector('.a-button.a-button--secondary.a-button--small.a-button--left.a-button.w-header__button-login.w-header__buttons-item');
-    await cursor.click('.a-button.a-button--secondary.a-button--small.a-button--left.a-button.w-header__button-login.w-header__buttons-item');
+    await this.cursor.click('.a-button.a-button--secondary.a-button--small.a-button--left.a-button.w-header__button-login.w-header__buttons-item');
 
     await this.page.waitForSelector('[data-qa-selector="phone"]');
 
@@ -90,7 +40,7 @@ export default class Premier {
       delay: Utils.getRndInteger(global.config.limits.keyboard.delay.min, global.config.limits.keyboard.delay.max)
     });
 
-    await cursor.click('[data-qa-selector="continue-button"]');
+    await this.cursor.click('[data-qa-selector="continue-button"]');
 
     try {
       await this.page.waitForSelector('.a-pincode-input__input', {
@@ -129,7 +79,7 @@ export default class Premier {
 
       try {
         await this.page.waitForSelector('.m-code-resend__button');
-        await cursor.click('.m-code-resend__button');
+        await this.cursor.click('.m-code-resend__button');
       } catch (e) {
         this.logger.error('Не могу найти кнопку переотправки сообщения');
       }
