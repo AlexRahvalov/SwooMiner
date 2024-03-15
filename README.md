@@ -11,7 +11,7 @@
 
 
 Что бы начать работу, необходимо:
-1. Установить [NodeJS](https://nodejs.org/en).
+1. Установить [NodeJS](https://nodejs.org/en) 16+.
 2. Возможно надо будет установить [PowerShell](https://learn.microsoft.com/ru-ru/powershell/scripting/install/installing-powershell-on-windows?view=powershell-7.4#msi).
 3. Скачать данный [проект](https://github.com/AlexRahvalov/SwooMiner/releases).
 4. Распакуйте скачанный архив в удобную для вас папку.
