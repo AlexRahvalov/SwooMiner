@@ -1,24 +1,10 @@
-import {IAntiCaptcha} from "./IAntiCaptcha";
-
 const axios = require('axios');
 import Utils from "../utils";
 import BaseAntiCaptcha from "./base";
 
-export default class RuCaptcha extends BaseAntiCaptcha implements IAntiCaptcha {
-  private _secret;
-
+export default class RuCaptcha extends BaseAntiCaptcha {
   constructor(secret: string) {
-    super();
-
-    this.secret = secret;
-  }
-
-  set secret(secret: string) {
-    this._secret = secret;
-  }
-
-  get secret() {
-    return this._secret;
+    super(secret);
   }
 
   async process(image: string) {
