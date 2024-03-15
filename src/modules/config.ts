@@ -10,8 +10,14 @@ export default class Config {
   constructor() {
     try {
       this.config = require('../../config');
-      this.verify();
+
       this.migrate();
+
+      const error = this.verify();
+      if (error) {
+        this.logger.error(`[Config] ${error}`);
+        process.exit(1);
+      }
     } catch {
       this.logger.error(`Файл конфигурации config.json не найден`);
       process.exit(1);
@@ -19,7 +25,35 @@ export default class Config {
   }
 
   verify() {
+    if (this.version > this.config.version) {
+      return 'Невалидная версия';
+    }
 
+    if (this.config.limits.resend.min < 0 || this.config.limits.resend.max > Infinity) {
+      return 'Неверные параметры времени повтора отправки смс';
+    }
+
+    if (this.config.limits.keyboard.delay.min < 0 || this.config.limits.keyboard.delay.max > Infinity) {
+      return 'Невалидная конфигурация задержки печати';
+    }
+
+    if (this.config.limits.confirm.timeout < 0 || this.config.limits.confirm.timeout > Infinity) {
+      return 'Невалидная конфигурация ожидания окна ввода кода';
+    }
+
+    if (typeof this.config.plugins.adblock !== 'boolean') {
+      return 'adblock not bool';
+    }
+
+    if (typeof this.config.sites.premier !== 'boolean') {
+      return 'sites.premier is not bool'
+    }
+
+    if (typeof this.config.sites.tinkoff !== 'boolean') {
+      return 'sites.tinkoff is not bool'
+    }
+
+    return null;
   }
 
   get() {
