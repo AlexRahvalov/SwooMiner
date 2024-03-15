@@ -36,7 +36,7 @@
   },
   "sites": {
     "premier": true,
-    "tinkoff": false
+    "tinkoff": true
   },
   "browser": {
     "hide": false,
