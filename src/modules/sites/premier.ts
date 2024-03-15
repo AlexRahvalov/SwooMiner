@@ -27,27 +27,21 @@ export default class Premier {
     this.init().catch(async (err) => {
       this.logger.error(`Ошибка во время навигации по сайту. Создание отчёта об ошибке`);
 
-      fs.mkdirSync('./report');
-
-      await this.page?.screenshot({
+      const screenshot = await this.page?.screenshot({
         fullPage: true,
         type: 'jpeg',
-        quality: 100,
-        path: './report/img.jpg'
+        quality: 100
       });
 
       const zip = new AdmZip();
       await zip.addFile('error.bin', Buffer.from(JSON.stringify(err), 'utf8'));
-      await zip.addLocalFolderPromise("./report");
+      if (screenshot) {
+        await zip.addFile('img.jpg', screenshot);
+      }
       await zip.addLocalFolderPromise('./logs', {
         zipPath: '/logs'
       });
       zip.writeZip("./report.zip");
-
-      fs.rmSync('./report', {
-        recursive: true,
-        force: true
-      });
 
       this.logger.error(`Отчёт создан: report.zip. Отправьте его разработчику для исправления ошибки!`);
       process.exit(1);
