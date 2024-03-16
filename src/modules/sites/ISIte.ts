@@ -13,4 +13,5 @@ export interface ISIte {
 
   init: () => void;
   captcha: (response, page, cursor) => boolean;
+  prepare: () => void;
 }

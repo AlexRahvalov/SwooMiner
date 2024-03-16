@@ -20,6 +20,12 @@ export default class Premier extends BaseSite {
         }
       } catch { }
     });
+  }
+
+  async prepare() {
+    if (!this.page || !this.cursor) {
+      return;
+    }
 
     await this.page.goto('https://premier.one/', {waitUntil: "domcontentloaded"});
 

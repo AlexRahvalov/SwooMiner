@@ -46,6 +46,10 @@ export default class BaseSite implements ISIte {
     }).toString());
   }
 
+  async prepare() {
+
+  }
+
   captcha(response, page, cursor) {
     if (!global.AntiCaptcha.hasActiveProviders()) {
       this.logger.error(`Нет активных провайдеров анти-капчти, введите капчу вручную`);

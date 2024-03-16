@@ -92,10 +92,10 @@ const AdmZip = require('adm-zip');
       sites.push(Tinkoff);
     }
 
-    sites.forEach((clazz) => {
+    for (const clazz of sites) {
       const instance = new clazz(context, phoneData.phone);
 
-      instance.init().catch(async (err) => {
+      await instance.init().catch(async (err) => {
         instance.logger.error(`Ошибка во время навигации по сайту. Создание отчёта об ошибке`);
 
         const screenshot = await instance.page?.screenshot({
@@ -117,9 +117,11 @@ const AdmZip = require('adm-zip');
         instance.logger.error(`Отчёт создан: report.zip. Отправьте его разработчику для исправления ошибки!`);
 
         instance.page?.close();
-      }).then(() => {
-        instance.page?.bringToFront();
       });
-    });
+
+      await instance.page?.bringToFront();
+
+      await instance.prepare();
+    }
   }
 })();
