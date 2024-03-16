@@ -9,19 +9,19 @@ export default class Tinkoff extends BaseSite {
   async init() {
     await super.init();
 
-    if (!this.page || !this.cursor) {
+    if (!this.page) {
       return;
     }
 
     await this.page.goto('https://www.tinkoff.ru/auth/login/', {waitUntil: "domcontentloaded"});
 
     await this.page.waitForSelector('[automation-id="phone-input"]');
-    await this.cursor.click('[automation-id="phone-input"]');
+    await this.page.click('[automation-id="phone-input"]');
     await this.page.type('[automation-id="phone-input"]', this.phone, {
       delay: Utils.getRndInteger(global.config.limits.keyboard.delay.min, global.config.limits.keyboard.delay.max)
     });
 
-    await this.cursor.click('[automation-id="button-submit"]');
+    await this.page.click('[automation-id="button-submit"]');
 
     try {
       await this.page.waitForSelector('[automation-id="otp-input"]', {
@@ -64,7 +64,7 @@ export default class Tinkoff extends BaseSite {
 
     try {
       await this.page!.waitForSelector('[automation-id="resend-button"]');
-      await this.cursor!.click('[automation-id="resend-button"]');
+      await this.page!.click('[automation-id="resend-button"]');
     } catch (e) {
       this.logger.error('Не могу найти кнопку переотправки сообщения');
     }
