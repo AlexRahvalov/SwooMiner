@@ -1,12 +1,12 @@
 import Premier from './modules/sites/premier';
-import AntiCaptcha from "./modules/anticaptcha";
-import Config from "./modules/config";
+import AntiCaptcha from './modules/anticaptcha';
+import Config from './modules/config';
 
 global.config = new Config().get();
 global.AntiCaptcha = new AntiCaptcha();
 
 import Logger from './modules/logger';
-import Tinkoff from "./modules/sites/tinkoff";
+import Tinkoff from './modules/sites/tinkoff';
 
 const logger = new Logger({
   service: 'core'
@@ -15,14 +15,14 @@ const logger = new Logger({
 const chromium = require('chrome-aws-lambda');
 const {addExtra} = require('puppeteer-extra');
 const puppeteer = addExtra(chromium.puppeteer);
-const AdmZip = require("adm-zip");
+const AdmZip = require('adm-zip');
 
 (async () => {
-  const StealthPlugin = require("puppeteer-extra-plugin-stealth");
+  const StealthPlugin = require('puppeteer-extra-plugin-stealth');
   const stealth = StealthPlugin();
 
   stealth.enabledEvasions.delete('accept-language');
-  puppeteer.use(stealth)
+  puppeteer.use(stealth);
 
   if (global.config.plugins.adblock) {
     const {DEFAULT_INTERCEPT_RESOLUTION_PRIORITY} = require('puppeteer');
@@ -38,7 +38,21 @@ const AdmZip = require("adm-zip");
     );
   }
 
-  const browser = await puppeteer.launch({headless: global.config.browser.hide, devtools: global.config.browser.devtools});
+  const args = puppeteer.defaultArgs();
+
+  args.push(
+    '--disable-background-timer-throttling',
+    '--disable-backgrounding-occluded-windows',
+    '--disable-renderer-backgrounding',
+    '--enable-webgl-draft-extensions'
+  );
+
+  const browser = await puppeteer.launch({
+    headless: global.config.browser.hide,
+    devtools: global.config.browser.devtools,
+    ignoreDefaultArgs: true,
+    args
+  });
   const context = await browser.createIncognitoBrowserContext();
 
   for (let idx = 0; idx < global.config.phones.length; idx++) {
@@ -78,7 +92,7 @@ const AdmZip = require("adm-zip");
         await zip.addLocalFolderPromise('./logs', {
           zipPath: '/logs'
         });
-        zip.writeZip("./report.zip");
+        zip.writeZip('./report.zip');
 
         instance.logger.error(`Отчёт создан: report.zip. Отправьте его разработчику для исправления ошибки!`);
 
