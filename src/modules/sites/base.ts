@@ -12,6 +12,7 @@ export default class BaseSite implements ISIte {
   logger: Logger;
 
   page: Page | null = null;
+  cursor: GhostCursor | null = null;
 
   constructor(context, phone) {
     this.context = context;
@@ -32,6 +33,8 @@ export default class BaseSite implements ISIte {
         if (!response.ok()) return this.logger.debug(`Запрос ${response.url()} неуспешен`);
       } catch { }
     });
+    this.cursor = createCursor(this.page);
+    this.cursor.toggleRandomMove(true);
     await this.page.setExtraHTTPHeaders({
       'accept-encoding': 'gzip, deflate, br',
       'accept-language': 'ru-RU,ru;q=0.9,en-US;q=0.8,en;q=0.7,uk;q=0.6',
@@ -43,7 +46,7 @@ export default class BaseSite implements ISIte {
     }).toString());
   }
 
-  captcha(response, page) {
+  captcha(response, page, cursor) {
     if (!global.AntiCaptcha.hasActiveProviders()) {
       this.logger.error(`Нет активных провайдеров анти-капчти, введите капчу вручную`);
 
