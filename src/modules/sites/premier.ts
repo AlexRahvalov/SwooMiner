@@ -54,9 +54,7 @@ export default class Premier extends BaseSite {
   }
 
   async captcha(response, page, cursor) {
-    if (!global.AntiCaptcha.hasActiveProviders()) {
-      this.logger.error(`Нет активных провайдеров анти-капчти, введите капчу вручную`);
-
+    if (!super.captcha(response, page, cursor)) {
       return;
     }
 
