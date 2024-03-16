@@ -83,9 +83,9 @@ const AdmZip = require("adm-zip");
         instance.logger.error(`Отчёт создан: report.zip. Отправьте его разработчику для исправления ошибки!`);
 
         instance.page?.close();
+      }).then(() => {
+        instance.page?.bringToFront();
       });
-
-      instance.page?.bringToFront();
     });
   }
 })();
