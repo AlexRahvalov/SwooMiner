@@ -54,8 +54,6 @@ export default class Tinkoff extends BaseSite {
     }
 
     this.logger.info(`Отправили сообщение, ждём перед повторной отправкой ${Number(delay / 1000)} секунд`);
-    await Utils.sleep(delay);
-
     return delay;
   }
 
