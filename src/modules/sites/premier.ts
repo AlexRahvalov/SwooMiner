@@ -9,14 +9,14 @@ export default class Premier extends BaseSite {
   async init() {
     await super.init();
 
-    if (!this.page || !this.cursor) {
+    if (!this.page) {
       return;
     }
 
     this.page.on('response', async (response) => {
       try {
         if (response.url() === 'https://auth.gid.ru/api/v1/sdk/web/users/score') {
-          await this.captcha(response, this.page, this.cursor)
+          await this.captcha(response, this.page)
         }
       } catch { }
     });
@@ -24,7 +24,7 @@ export default class Premier extends BaseSite {
     await this.page.goto('https://premier.one/', {waitUntil: "domcontentloaded"});
 
     await this.page.waitForSelector('.a-button.a-button--secondary.a-button--small.a-button--left.a-button.w-header__button-login.w-header__buttons-item');
-    await this.cursor.click('.a-button.a-button--secondary.a-button--small.a-button--left.a-button.w-header__button-login.w-header__buttons-item');
+    await this.page.click('.a-button.a-button--secondary.a-button--small.a-button--left.a-button.w-header__button-login.w-header__buttons-item');
 
     await this.page.waitForSelector('[data-qa-selector="phone"]');
 
@@ -40,7 +40,7 @@ export default class Premier extends BaseSite {
       delay: Utils.getRndInteger(global.config.limits.keyboard.delay.min, global.config.limits.keyboard.delay.max)
     });
 
-    await this.cursor.click('[data-qa-selector="continue-button"]');
+    await this.page.click('[data-qa-selector="continue-button"]');
 
     try {
       await this.page.waitForSelector('.a-pincode-input__input', {
@@ -53,8 +53,8 @@ export default class Premier extends BaseSite {
     setTimeout(this.resend.bind(this), await this.getDelay());
   }
 
-  async captcha(response, page, cursor) {
-    if (!super.captcha(response, page, cursor)) {
+  async captcha(response, page) {
+    if (!super.captcha(response, page)) {
       return;
     }
 
@@ -66,14 +66,14 @@ export default class Premier extends BaseSite {
     if (solve === false) {
       this.logger.error(`Нет ответа от сервиса анти-капчи, пробуем снова...`);
 
-      return this.captcha(response, page, cursor);
+      return this.captcha(response, page);
     }
 
     this.logger.verbose(`Получен ответ от сервиса анти-капчи: ${JSON.stringify(solve)}`);
 
-    await cursor.click('#code');
+    await page.click('#code');
     await page.type('#code', solve.text, {delay: Utils.getRndInteger(global.config.limits.keyboard.delay.min, global.config.limits.keyboard.delay.max)});
-    await cursor.click('[type="submit"]');
+    await page.click('[type="submit"]');
 
     return await page.waitForResponse(async (res) => {
       try {
@@ -84,7 +84,7 @@ export default class Premier extends BaseSite {
             this.logger.error(`Неверная капча, пробуем снова...`);
             global.AntiCaptcha.report(solve.provider, solve.id);
 
-            return this.captcha(response, page, cursor);
+            return this.captcha(response, page);
           } else if (resolve.errors_description) {
             this.logger.error("Error: " + resolve.errors_description);
           } else if (!resolve.errors_description) {
@@ -137,7 +137,7 @@ export default class Premier extends BaseSite {
 
     try {
       await this.page!.waitForSelector('.m-code-resend__button');
-      await this.cursor!.click('.m-code-resend__button');
+      await this.page!.click('.m-code-resend__button');
     } catch (e) {
       this.logger.error('Не могу найти кнопку переотправки сообщения');
     }

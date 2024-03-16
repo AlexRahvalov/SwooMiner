@@ -7,7 +7,6 @@ export interface ISIte {
 
   context: BrowserContext;
   page: Page | null;
-  cursor: GhostCursor | null;
 
   logger: Logger;
 
