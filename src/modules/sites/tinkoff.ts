@@ -38,11 +38,17 @@ export default class Tinkoff extends BaseSite {
     let delay = Utils.getRndInteger(global.config.limits.resend.min, global.config.limits.resend.max);
 
     const error = await this.page!.evaluate(() => {
-      return '';
+      const element = document.querySelectorAll('[automation-id="server-error"]')[0];
+
+      if (element) {
+        return element.textContent;
+      }
+
+      return null;
     });
 
     if (error) {
-      // automation-id="left-time"
+      this.logger.error(`Сервис выдал ошибку: ${error}`);
     }
 
     this.logger.info(`Отправили сообщение, ждём перед повторной отправкой ${Number(delay / 1000)} секунд`);
