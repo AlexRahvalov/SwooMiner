@@ -43,4 +43,14 @@ export default class BaseSite implements ISIte {
       deviceCategory: 'desktop'
     }).toString());
   }
+
+  captcha(response, page, cursor) {
+    if (!global.AntiCaptcha.hasActiveProviders()) {
+      this.logger.error(`Нет активных провайдеров анти-капчти, введите капчу вручную`);
+
+      return false;
+    }
+
+    return true;
+  }
 }
