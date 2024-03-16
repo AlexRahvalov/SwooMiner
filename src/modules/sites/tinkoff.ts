@@ -8,7 +8,9 @@ export default class Tinkoff extends BaseSite {
 
   async init() {
     await super.init();
+  }
 
+  async prepare() {
     if (!this.page || !this.cursor) {
       return;
     }
