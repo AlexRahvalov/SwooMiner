@@ -84,6 +84,8 @@ const AdmZip = require("adm-zip");
 
         instance.page?.close();
       });
+
+      instance.page?.bringToFront();
     });
   }
 })();
