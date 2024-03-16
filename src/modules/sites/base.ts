@@ -25,6 +25,8 @@ export default class BaseSite implements ISIte {
   }
 
   async init() {
+    this.logger.info(`Инициализация ${this.constructor.name}`);
+
     this.page = await this.context.newPage();
     this.page.on('response', async (response) => {
       try {
