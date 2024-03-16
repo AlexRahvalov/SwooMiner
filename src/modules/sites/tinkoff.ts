@@ -25,18 +25,18 @@ export default class Tinkoff extends BaseSite {
 
     await this.cursor.click('[automation-id="button-submit"]');
 
+    setTimeout(this.resend.bind(this), await this.getDelay());
+  }
+
+  async getDelay() {
     try {
-      await this.page.waitForSelector('[automation-id="otp-input"]', {
+      await this.page!.waitForSelector('[automation-id="otp-input"]', {
         timeout: Number(global.config.limits.confirm.timeout)
       });
     } catch {
       this.logger.error(`Страница с вводом кода не была открыта, возможно словили ошибку`);
     }
 
-    setTimeout(this.resend.bind(this), await this.getDelay());
-  }
-
-  async getDelay() {
     let delay = Utils.getRndInteger(global.config.limits.resend.min, global.config.limits.resend.max);
 
     const error = await this.page!.evaluate(() => {

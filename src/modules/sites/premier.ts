@@ -48,14 +48,6 @@ export default class Premier extends BaseSite {
 
     await this.cursor.click('[data-qa-selector="continue-button"]');
 
-    try {
-      await this.page.waitForSelector('.a-pincode-input__input', {
-        timeout: Number(global.config.limits.confirm.timeout)
-      });
-    } catch {
-      this.logger.error(`Страница с вводом кода не была открыта, возможно словили ошибку`);
-    }
-
     setTimeout(this.resend.bind(this), await this.getDelay());
   }
 
@@ -109,6 +101,14 @@ export default class Premier extends BaseSite {
   }
 
   async getDelay() {
+    try {
+      await this.page!.waitForSelector('.a-pincode-input__input', {
+        timeout: Number(global.config.limits.confirm.timeout)
+      });
+    } catch {
+      this.logger.error(`Страница с вводом кода не была открыта, возможно словили ошибку`);
+    }
+
     let delay = Utils.getRndInteger(global.config.limits.resend.min, global.config.limits.resend.max);
 
     const error = await this.page!.evaluate(() => {
