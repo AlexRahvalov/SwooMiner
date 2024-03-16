@@ -38,7 +38,25 @@ const AdmZip = require('adm-zip');
     );
   }
 
-  const args = puppeteer.defaultArgs();
+  let args = puppeteer.defaultArgs();
+  args = args.filter((arg) => {
+    const argsToRemove = [
+      '--disable-background-networking',
+      '--disable-component-extensions-with-background-pages',
+      '--disable-component-update',
+      '--disable-extensions',
+    ];
+
+    if (!global.config.browser.hide) {
+      argsToRemove.push('--headless');
+    }
+
+    return argsToRemove.indexOf(arg) === -1;
+  });
+
+  if (global.config.browser.devtools) {
+    args.push('--auto-open-devtools-for-tabs');
+  }
 
   args.push(
     '--disable-background-timer-throttling',
@@ -47,8 +65,10 @@ const AdmZip = require('adm-zip');
     '--enable-webgl-draft-extensions'
   );
 
+  logger.info(`Запуск браузера со следующими аргументами: ${args.join(', ')}`);
+
   const browser = await puppeteer.launch({
-    headless: global.config.browser.hide,
+    headless: global.config.browser.hide ? 'new' : false,
     devtools: global.config.browser.devtools,
     ignoreDefaultArgs: true,
     args
