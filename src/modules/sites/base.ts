@@ -59,4 +59,12 @@ export default class BaseSite implements ISIte {
 
     return true;
   }
+
+  screenshot(locate = '/warnings') {
+    this.page?.screenshot({
+      type: 'jpeg',
+      quality: 100,
+      path: `${locate}/${this.constructor.name}/${this.phone.replace('+', '')}.jpg`
+    });
+  }
 }
