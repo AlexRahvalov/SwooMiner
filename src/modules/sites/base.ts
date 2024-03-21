@@ -2,6 +2,7 @@ import {createCursor, GhostCursor} from "ghost-cursor";
 import {ISIte} from "./ISIte";
 import {BrowserContext, Page} from "puppeteer";
 import Logger from "../logger";
+import * as fs from "fs";
 
 const UserAgent = require('user-agents');
 
@@ -61,10 +62,25 @@ export default class BaseSite implements ISIte {
   }
 
   screenshot(locate = '/warnings') {
+    const dir = `${locate}/${this.constructor.name}`;
+
+    if (!fs.existsSync(dir)) {
+      const pathes = dir.split('/');
+      pathes.forEach((name, idx) => {
+        let path = '';
+
+        for (let idy = 0; idy <= idx; idy ++) {
+          path += pathes[idx];
+        }
+
+        fs.mkdirSync(path);
+      });
+    }
+
     this.page?.screenshot({
       type: 'jpeg',
       quality: 100,
-      path: `${locate}/${this.constructor.name}/${this.phone.replace('+', '')}.jpg`
+      path: `${dir}/${this.phone.replace('+', '')}.jpg`
     });
   }
 }
