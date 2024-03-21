@@ -61,26 +61,19 @@ export default class BaseSite implements ISIte {
     return true;
   }
 
-  screenshot(locate = '/warnings') {
-    const dir = `${locate}/${this.constructor.name}`;
+  screenshot(dir = './warnings', name = this.phone.replace('+', '')) {
+    const path = `${dir}/${this.constructor.name}`;
 
-    if (!fs.existsSync(dir)) {
-      const pathes = dir.split('/');
-      pathes.forEach((name, idx) => {
-        let path = '';
-
-        for (let idy = 0; idy <= idx; idy ++) {
-          path += pathes[idx];
-        }
-
-        fs.mkdirSync(path);
+    if (!fs.existsSync(path)) {
+      fs.mkdirSync(path, {
+        recursive: true
       });
     }
 
     this.page?.screenshot({
       type: 'jpeg',
       quality: 100,
-      path: `${dir}/${this.phone.replace('+', '')}.jpg`
+      path: `${path}/${name}.jpg`
     });
   }
 }
