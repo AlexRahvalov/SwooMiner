@@ -147,6 +147,7 @@ export default class Premier extends BaseSite {
       await this.cursor!.click('.m-code-resend__button');
     } catch (e) {
       this.logger.error('Не могу найти кнопку переотправки сообщения');
+      super.screenshot();
     }
 
     setTimeout(this.resend.bind(this), await this.getDelay());
