@@ -29,22 +29,6 @@ export default class Tinkoff extends BaseSite {
   }
 
   async getDelay() {
-    try {
-      await this.page!.waitForSelector('[automation-id="otp-input"]', {
-        timeout: Number(global.config.limits.confirm.timeout)
-      });
-    } catch {
-      this.logger.error(`Страница с вводом кода не была открыта, возможно словили ошибку, перезагружаем страницу`);
-
-      if (this.resendTimeout) {
-        clearTimeout(this.resendTimeout);
-        this.resendTimeout = null;
-      }
-
-      await this.prepare();
-      return;
-    }
-
     let delay = Utils.getRndInteger(global.config.limits.resend.min, global.config.limits.resend.max);
 
     const error = await this.page!.evaluate(() => {
@@ -57,11 +41,28 @@ export default class Tinkoff extends BaseSite {
       return null;
     });
 
-    if (error) {
+    if (!error) {
+      try {
+        await this.page!.waitForSelector('[automation-id="otp-input"]', {
+          timeout: Number(global.config.limits.confirm.timeout)
+        });
+
+        this.logger.info(`Отправили сообщение, ждём перед повторной отправкой ${Number(delay / 1000)} секунд`);
+      } catch {
+        this.logger.error(`Страница с вводом кода не была открыта, перезагружаем страницу`);
+
+        if (this.resendTimeout) {
+          clearTimeout(this.resendTimeout);
+          this.resendTimeout = null;
+        }
+
+        await this.prepare();
+        return;
+      }
+    } else {
       this.logger.error(`Сервис выдал ошибку: ${error}`);
     }
 
-    this.logger.info(`Отправили сообщение, ждём перед повторной отправкой ${Number(delay / 1000)} секунд`);
     return delay;
   }
 

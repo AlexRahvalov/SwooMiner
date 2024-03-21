@@ -101,22 +101,6 @@ export default class Premier extends BaseSite {
   }
 
   async getDelay() {
-    try {
-      await this.page!.waitForSelector('.a-pincode-input__input', {
-        timeout: Number(global.config.limits.confirm.timeout)
-      });
-    } catch {
-      this.logger.error(`Страница с вводом кода не была открыта, возможно словили ошибку, перезагружаем страницу`);
-
-      if (this.resendTimeout) {
-        clearTimeout(this.resendTimeout);
-        this.resendTimeout = null;
-      }
-
-      await this.prepare();
-      return;
-    }
-
     let delay = Utils.getRndInteger(global.config.limits.resend.min, global.config.limits.resend.max);
 
     const error = await this.page!.evaluate(() => {
@@ -129,7 +113,25 @@ export default class Premier extends BaseSite {
       return null;
     });
 
-    if (error) {
+    if (!error) {
+      try {
+        await this.page!.waitForSelector('.a-pincode-input__input', {
+          timeout: Number(global.config.limits.confirm.timeout)
+        });
+
+        this.logger.info(`Отправили сообщение, ждём перед повторной отправкой ${Number(delay / 1000)} секунд`);
+      } catch {
+        this.logger.error(`Страница с вводом кода не была открыта, возможно словили ошибку, перезагружаем страницу`);
+
+        if (this.resendTimeout) {
+          clearTimeout(this.resendTimeout);
+          this.resendTimeout = null;
+        }
+
+        await this.prepare();
+        return;
+      }
+    } else {
       this.logger.error(`Сервис выдал ошибку: ${error}`);
 
       const banMatch = error.match(/Вы уже запросили код\. Попробуйте снова через: (\d+)/);
@@ -140,7 +142,6 @@ export default class Premier extends BaseSite {
       }
     }
 
-    this.logger.info(`Отправили сообщение, ждём перед повторной отправкой ${Number(delay / 1000)} секунд`);
     return delay;
   }
 
