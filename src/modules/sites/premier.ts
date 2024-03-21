@@ -107,6 +107,7 @@ export default class Premier extends BaseSite {
       });
     } catch {
       this.logger.error(`Страница с вводом кода не была открыта, возможно словили ошибку`);
+      super.screenshot();
     }
 
     let delay = Utils.getRndInteger(global.config.limits.resend.min, global.config.limits.resend.max);
