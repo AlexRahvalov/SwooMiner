@@ -7,48 +7,56 @@ export default class Premier extends BaseSite {
   }
 
   async init() {
-    await super.init();
+    await super.init(() => {
+      this.page?.on('response', async (response) => {
+        try {
+          if (response.url() === 'https://auth.gid.ru/api/v1/sdk/web/users/score') {
+            await this.captcha(response, this.page, this.cursor)
+          }
+        } catch { }
+      });
+    });
 
     if (!this.page || !this.cursor) {
       return;
     }
-
-    this.page.on('response', async (response) => {
-      try {
-        if (response.url() === 'https://auth.gid.ru/api/v1/sdk/web/users/score') {
-          await this.captcha(response, this.page, this.cursor)
-        }
-      } catch { }
-    });
   }
 
   async prepare() {
+    await super.prepare();
+
     if (!this.page || !this.cursor) {
       return;
     }
 
-    await this.page.goto('https://premier.one/', {waitUntil: "domcontentloaded"});
+    try {
+      await this.page.goto('https://premier.one/', {waitUntil: "domcontentloaded"});
 
-    await this.page.waitForSelector('.a-button.a-button--secondary.a-button--small.a-button--left.a-button.w-header__button-login.w-header__buttons-item');
-    await this.cursor.click('.a-button.a-button--secondary.a-button--small.a-button--left.a-button.w-header__button-login.w-header__buttons-item');
+      await this.page.waitForSelector('.a-button.a-button--secondary.a-button--small.a-button--left.a-button.w-header__button-login.w-header__buttons-item');
+      await this.cursor.click('.a-button.a-button--secondary.a-button--small.a-button--left.a-button.w-header__button-login.w-header__buttons-item');
 
-    await this.page.waitForSelector('[data-qa-selector="phone"]');
+      await this.page.waitForSelector('[data-qa-selector="phone"]');
 
-    await this.page.evaluate(() => {
-      const element: HTMLInputElement | null = document.querySelector('[data-qa-selector="phone"]');
+      await this.page.evaluate(() => {
+        const element: HTMLInputElement | null = document.querySelector('[data-qa-selector="phone"]');
 
-      if (element) {
-        element.value = '';
-      }
-    });
+        if (element) {
+          element.value = '';
+        }
+      });
 
-    await this.page.type('[data-qa-selector="phone"]', this.phone, {
-      delay: Utils.getRndInteger(global.config.limits.keyboard.delay.min, global.config.limits.keyboard.delay.max)
-    });
+      await this.page.type('[data-qa-selector="phone"]', this.phone, {
+        delay: Utils.getRndInteger(global.config.limits.keyboard.delay.min, global.config.limits.keyboard.delay.max)
+      });
 
-    await this.cursor.click('[data-qa-selector="continue-button"]');
+      await this.cursor.click('[data-qa-selector="continue-button"]');
 
-    this.resendTimeout = setTimeout(this.resend.bind(this), await this.getDelay());
+      this.resendTimeout = setTimeout(this.resend.bind(this), await this.getDelay());
+    } catch (e) {
+      // @ts-ignore
+      this.logger.error(`Ошибка при навигации по ${this.constructor.name}: ${e.message}`);
+      return this.prepare();
+    }
   }
 
   async captcha(response, page, cursor) {

@@ -11,21 +11,29 @@ export default class Tinkoff extends BaseSite {
   }
 
   async prepare() {
+    await super.prepare();
+
     if (!this.page || !this.cursor) {
       return;
     }
 
-    await this.page.goto('https://www.tinkoff.ru/auth/login/', {waitUntil: "domcontentloaded"});
+    try {
+      await this.page.goto('https://www.tinkoff.ru/auth/login/', {waitUntil: "domcontentloaded"});
 
-    await this.page.waitForSelector('[automation-id="phone-input"]');
-    await this.cursor.click('[automation-id="phone-input"]');
-    await this.page.type('[automation-id="phone-input"]', this.phone, {
-      delay: Utils.getRndInteger(global.config.limits.keyboard.delay.min, global.config.limits.keyboard.delay.max)
-    });
+      await this.page.waitForSelector('[automation-id="phone-input"]');
+      await this.cursor.click('[automation-id="phone-input"]');
+      await this.page.type('[automation-id="phone-input"]', this.phone, {
+        delay: Utils.getRndInteger(global.config.limits.keyboard.delay.min, global.config.limits.keyboard.delay.max)
+      });
 
-    await this.cursor.click('[automation-id="button-submit"]');
+      await this.cursor.click('[automation-id="button-submit"]');
 
-    this.resendTimeout = setTimeout(this.resend.bind(this), await this.getDelay());
+      this.resendTimeout = setTimeout(this.resend.bind(this), await this.getDelay());
+    } catch (e) {
+      // @ts-ignore
+      this.logger.error(`Ошибка при навигации по ${this.constructor.name}: ${e.message}`);
+      return this.prepare();
+    }
   }
 
   async getDelay() {

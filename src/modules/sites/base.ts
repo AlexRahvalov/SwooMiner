@@ -16,6 +16,8 @@ export default class BaseSite implements ISIte {
   page: Page | null = null;
   cursor: GhostCursor | null = null;
 
+  initCallback: Function | null = null;
+
   constructor(context, phone) {
     this.context = context;
     this.phone = phone;
@@ -26,8 +28,10 @@ export default class BaseSite implements ISIte {
     });
   }
 
-  async init() {
+  async init(callback: Function | null = null) {
     this.logger.info(`Инициализация ${this.constructor.name}`);
+
+    this.initCallback = callback;
 
     this.page = await this.context.newPage();
     this.page.on('response', async (response) => {
@@ -46,10 +50,21 @@ export default class BaseSite implements ISIte {
     await this.page.setUserAgent(new UserAgent({
       deviceCategory: 'desktop'
     }).toString());
+
+    if (this.initCallback) {
+      this.initCallback.call(this);
+    }
   }
 
   async prepare() {
+    if (this.page !== null) {
+      this.cursor = null;
 
+      this.page?.close();
+      this.page = null;
+    }
+
+    await this.init(this.initCallback);
   }
 
   captcha(response, page, cursor) {
