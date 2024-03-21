@@ -8,6 +8,7 @@ const UserAgent = require('user-agents');
 
 export default class BaseSite implements ISIte {
   readonly phone;
+  protected resendTimeout: NodeJS.Timeout | null = null;
 
   context: BrowserContext;
   logger: Logger;

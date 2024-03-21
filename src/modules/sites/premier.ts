@@ -48,7 +48,7 @@ export default class Premier extends BaseSite {
 
     await this.cursor.click('[data-qa-selector="continue-button"]');
 
-    setTimeout(this.resend.bind(this), await this.getDelay());
+    this.resendTimeout = setTimeout(this.resend.bind(this), await this.getDelay());
   }
 
   async captcha(response, page, cursor) {
@@ -106,8 +106,15 @@ export default class Premier extends BaseSite {
         timeout: Number(global.config.limits.confirm.timeout)
       });
     } catch {
-      this.logger.error(`Страница с вводом кода не была открыта, возможно словили ошибку`);
-      super.screenshot();
+      this.logger.error(`Страница с вводом кода не была открыта, возможно словили ошибку, перезагружаем страницу`);
+
+      if (this.resendTimeout) {
+        clearTimeout(this.resendTimeout);
+        this.resendTimeout = null;
+      }
+
+      await this.prepare();
+      return;
     }
 
     let delay = Utils.getRndInteger(global.config.limits.resend.min, global.config.limits.resend.max);
@@ -150,6 +157,6 @@ export default class Premier extends BaseSite {
       super.screenshot();
     }
 
-    setTimeout(this.resend.bind(this), await this.getDelay());
+    this.resendTimeout = setTimeout(this.resend.bind(this), await this.getDelay());
   }
 }
