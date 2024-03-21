@@ -122,6 +122,7 @@ export default class Premier extends BaseSite {
 
         this.logger.info(`Отправили сообщение, ждём перед повторной отправкой ${Number(delay / 1000)} секунд`);
       } catch {
+        super.screenshot();
         this.logger.error(`Страница с вводом кода не была открыта, возможно словили ошибку, перезагружаем страницу`);
 
         if (this.resendTimeout) {
