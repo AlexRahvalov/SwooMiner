@@ -60,7 +60,9 @@ export default class BaseSite implements ISIte {
     if (this.page !== null) {
       this.cursor = null;
 
-      this.page?.close();
+      this.page.removeAllListeners();
+      await this.page.close();
+
       this.page = null;
     }
 
