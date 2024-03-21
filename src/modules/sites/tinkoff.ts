@@ -68,6 +68,7 @@ export default class Tinkoff extends BaseSite {
       await this.cursor!.click('[automation-id="resend-button"]');
     } catch (e) {
       this.logger.error('Не могу найти кнопку переотправки сообщения');
+      super.screenshot();
     }
 
     setTimeout(this.resend.bind(this), await this.getDelay());
