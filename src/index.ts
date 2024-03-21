@@ -58,6 +58,10 @@ const AdmZip = require('adm-zip');
     args.push('--auto-open-devtools-for-tabs');
   }
 
+  if (process.platform !== "win32") {
+    args.push('--no-sandbox');
+  }
+
   args.push(
     '--disable-background-timer-throttling',
     '--disable-backgrounding-occluded-windows',
