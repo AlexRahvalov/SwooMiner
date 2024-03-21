@@ -105,7 +105,9 @@ export default class Premier extends BaseSite {
     let delay = Utils.getRndInteger(global.config.limits.resend.min, global.config.limits.resend.max);
 
     const error = await this.page!.evaluate(() => {
-      const element = document.querySelectorAll('[data-qa-selector="error"]')[1];
+      const element =
+        document.querySelectorAll('[data-qa-selector="error"]')[0]
+        || document.querySelectorAll('[data-qa-selector="error"]')[1];
 
       if (element) {
         return element.textContent;
