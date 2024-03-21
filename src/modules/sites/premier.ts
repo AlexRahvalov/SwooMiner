@@ -101,6 +101,7 @@ export default class Premier extends BaseSite {
   }
 
   async getDelay() {
+    this.page?.waitForTimeout(5000);
     let delay = Utils.getRndInteger(global.config.limits.resend.min, global.config.limits.resend.max);
 
     const error = await this.page!.evaluate(() => {
