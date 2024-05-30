@@ -8,70 +8,45 @@ export default class Tinkoff extends BaseSite {
 
   async init() {
     await super.init();
-  }
-
-  async prepare() {
-    await super.prepare();
 
     if (!this.page || !this.cursor) {
       return;
     }
 
+    await this.page.goto('https://www.tinkoff.ru/auth/login/', {waitUntil: "domcontentloaded"});
+
+    await this.page.waitForSelector('[automation-id="phone-input"]');
+    await this.cursor.click('[automation-id="phone-input"]');
+    await this.page.type('[automation-id="phone-input"]', this.phone, {
+      delay: Utils.getRndInteger(global.config.limits.keyboard.delay.min, global.config.limits.keyboard.delay.max)
+    });
+
+    await this.cursor.click('[automation-id="button-submit"]');
+
     try {
-      await this.page.goto('https://www.tinkoff.ru/auth/login/', {waitUntil: "domcontentloaded"});
-
-      await this.page.waitForSelector('[automation-id="phone-input"]');
-      await this.cursor.click('[automation-id="phone-input"]');
-      await this.page.type('[automation-id="phone-input"]', this.phone, {
-        delay: Utils.getRndInteger(global.config.limits.keyboard.delay.min, global.config.limits.keyboard.delay.max)
+      await this.page.waitForSelector('[automation-id="otp-input"]', {
+        timeout: Number(global.config.limits.confirm.timeout)
       });
-
-      await this.cursor.click('[automation-id="button-submit"]');
-
-      this.resendTimeout = setTimeout(this.resend.bind(this), await this.getDelay());
-    } catch (e) {
-      // @ts-ignore
-      this.logger.error(`Ошибка при навигации по ${this.constructor.name}: ${e.message}`);
-      return this.prepare();
+    } catch {
+      this.logger.error(`Страница с вводом кода не была открыта, возможно словили ошибку`);
     }
+
+    setTimeout(this.resend.bind(this), await this.getDelay());
   }
 
   async getDelay() {
-    this.page?.waitForTimeout(5000);
     let delay = Utils.getRndInteger(global.config.limits.resend.min, global.config.limits.resend.max);
 
     const error = await this.page!.evaluate(() => {
-      const element = document.querySelectorAll('[automation-id="server-error"]')[0];
-
-      if (element) {
-        return element.textContent;
-      }
-
-      return null;
+      return '';
     });
 
-    if (!error) {
-      try {
-        await this.page!.waitForSelector('[automation-id="otp-input"]', {
-          timeout: Number(global.config.limits.confirm.timeout)
-        });
-
-        this.logger.info(`Отправили сообщение, ждём перед повторной отправкой ${Number(delay / 1000)} секунд`);
-      } catch {
-        super.screenshot();
-        this.logger.error(`Страница с вводом кода не была открыта, перезагружаем страницу`);
-
-        if (this.resendTimeout) {
-          clearTimeout(this.resendTimeout);
-          this.resendTimeout = null;
-        }
-
-        await this.prepare();
-        return;
-      }
-    } else {
-      this.logger.error(`Сервис выдал ошибку: ${error}`);
+    if (error) {
+      // automation-id="left-time"
     }
+
+    this.logger.info(`Отправили сообщение, ждём перед повторной отправкой ${Number(delay / 1000)} секунд`);
+    await Utils.sleep(delay);
 
     return delay;
   }
@@ -86,9 +61,8 @@ export default class Tinkoff extends BaseSite {
       await this.cursor!.click('[automation-id="resend-button"]');
     } catch (e) {
       this.logger.error('Не могу найти кнопку переотправки сообщения');
-      super.screenshot();
     }
 
-    this.resendTimeout = setTimeout(this.resend.bind(this), await this.getDelay());
+    setTimeout(this.resend.bind(this), await this.getDelay());
   }
 }

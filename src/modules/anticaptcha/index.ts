@@ -30,7 +30,7 @@ export default class AntiCaptcha {
   }
 
   public hasActiveProviders() {
-    return this.keys.length > 0;
+    return this.providers.length > 0;
   }
 
   public process(image: string) {
