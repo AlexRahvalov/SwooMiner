@@ -1,6 +1,7 @@
 /node_modules
 /SwooMiner
-SwooMiner vv0.0.1.zip
+*.zip
+*.rar
 config.json
 /logs/*.log
 /dist/

@@ -21,10 +21,10 @@ export default class Premier extends BaseSite {
       } catch { }
     });
 
-    await this.page.goto('https://premier.one/', {waitUntil: "domcontentloaded"});
+    await this.page.goto('https://premier.one/', {waitUntil: "networkidle2"});
 
-    await this.page.waitForSelector('.a-button.a-button--secondary.a-button--small.a-button--left.a-button.w-header__button-login.w-header__buttons-item');
-    await this.cursor.click('.a-button.a-button--secondary.a-button--small.a-button--left.a-button.w-header__button-login.w-header__buttons-item');
+    await this.page.waitForSelector('[data-qa-selector="enter-login-button"]');
+    await this.cursor.click('[data-qa-selector="enter-login-button"]');
 
     await this.page.waitForSelector('[data-qa-selector="phone"]');
 
