@@ -11,7 +11,5 @@ export interface ISIte {
 
   logger: Logger;
 
-  init: (callback?) => void;
-  captcha: (response, page, cursor) => boolean;
-  prepare: () => void;
+  init: () => void;
 }

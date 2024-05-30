@@ -2,21 +2,17 @@ import {createCursor, GhostCursor} from "ghost-cursor";
 import {ISIte} from "./ISIte";
 import {BrowserContext, Page} from "puppeteer";
 import Logger from "../logger";
-import * as fs from "fs";
 
 const UserAgent = require('user-agents');
 
 export default class BaseSite implements ISIte {
   readonly phone;
-  protected resendTimeout: NodeJS.Timeout | null = null;
 
   context: BrowserContext;
   logger: Logger;
 
   page: Page | null = null;
   cursor: GhostCursor | null = null;
-
-  initCallback: Function | null = null;
 
   constructor(context, phone) {
     this.context = context;
@@ -28,11 +24,7 @@ export default class BaseSite implements ISIte {
     });
   }
 
-  async init(callback: Function | null = null) {
-    this.logger.info(`Инициализация ${this.constructor.name}`);
-
-    this.initCallback = callback;
-
+  async init() {
     this.page = await this.context.newPage();
     this.page.on('response', async (response) => {
       try {
@@ -50,48 +42,5 @@ export default class BaseSite implements ISIte {
     await this.page.setUserAgent(new UserAgent({
       deviceCategory: 'desktop'
     }).toString());
-
-    if (this.initCallback) {
-      this.initCallback.call(this);
-    }
-  }
-
-  async prepare() {
-    if (this.page !== null) {
-      this.cursor = null;
-
-      this.page.removeAllListeners();
-      await this.page.close();
-
-      this.page = null;
-    }
-
-    await this.init(this.initCallback);
-  }
-
-  captcha(response, page, cursor) {
-    if (!global.AntiCaptcha.hasActiveProviders()) {
-      this.logger.error(`Нет активных провайдеров анти-капчти, введите капчу вручную`);
-
-      return false;
-    }
-
-    return true;
-  }
-
-  screenshot(dir = './warnings', name = this.phone.replace('+', '')) {
-    const path = `${dir}/${this.constructor.name}`;
-
-    if (!fs.existsSync(path)) {
-      fs.mkdirSync(path, {
-        recursive: true
-      });
-    }
-
-    this.page?.screenshot({
-      type: 'jpeg',
-      quality: 100,
-      path: `${path}/${name}.jpg`
-    });
   }
 }

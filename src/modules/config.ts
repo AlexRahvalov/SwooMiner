@@ -19,8 +19,6 @@ export default class Config {
         this.logger.error(`[Config] ${error}`);
         process.exit(1);
       }
-
-      this.logger.info(`Конфигурация v${this.version} успешно загружена`);
     } catch (e) {
       fs.copyFileSync('./config.example.json', './config.json');
 
