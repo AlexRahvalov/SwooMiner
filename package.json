@@ -9,7 +9,7 @@
   "main": "index.js",
   "type": "module",
   "scripts": {
-    "build": "bun build ./src/index.ts --outdir ./dist",
+    "build": "bun build ./src/index.ts --outdir ./dist --target=node",
     "start": "bun run src/index.ts"
   },
   "author": "Ximelie",
