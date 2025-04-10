@@ -2,11 +2,10 @@ import {createCursor, GhostCursor} from "ghost-cursor";
 import {ISIte} from "./ISIte";
 import {BrowserContext, Page} from "puppeteer";
 import Logger from "../logger";
-
-const UserAgent = require('user-agents');
+import UserAgent from 'user-agents';
 
 export default class BaseSite implements ISIte {
-  readonly phone;
+  readonly phone: string;
 
   context: BrowserContext;
   logger: Logger;
@@ -14,7 +13,7 @@ export default class BaseSite implements ISIte {
   page: Page | null = null;
   cursor: GhostCursor | null = null;
 
-  constructor(context, phone) {
+  constructor(context: BrowserContext, phone: string) {
     this.context = context;
     this.phone = phone;
 

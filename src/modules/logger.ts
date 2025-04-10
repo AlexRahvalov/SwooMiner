@@ -1,7 +1,15 @@
-const winston = require('winston');
+import winston from 'winston';
+
+interface WinstonLogger {
+  error: (message: string) => void;
+  info: (message: string) => void;
+  verbose: (message: string) => void;
+  debug: (message: string) => void;
+  add: (transport: any) => void;
+}
 
 export default class Logger {
-  private logger;
+  private logger: WinstonLogger;
 
   private readonly service;
   private level = 'verbose';
@@ -16,7 +24,7 @@ export default class Logger {
       transports: [
         new winston.transports.File({filename: `logs/${(new Date()).toLocaleDateString()}_${meta.service}.log`}),
       ],
-    });
+    }) as WinstonLogger;
 
 
     this.logger.add(new winston.transports.Console({

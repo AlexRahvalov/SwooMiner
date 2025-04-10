@@ -1,5 +1,12 @@
 import Logger from './logger';
-import * as fs from "fs";
+import { readFileSync, writeFileSync, copyFileSync } from "fs";
+import { dirname, join } from 'path';
+import { fileURLToPath } from 'url';
+
+// Получение текущей директории для ES модулей
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+const rootDir = join(__dirname, '..', '..');
 
 export default class Config {
   private logger = new Logger({
@@ -10,7 +17,9 @@ export default class Config {
 
   constructor() {
     try {
-      this.config = require('../../config.json');
+      // Используем абсолютный путь для поиска файла
+      const configPath = join(rootDir, 'config.json');
+      this.config = JSON.parse(readFileSync(configPath, 'utf-8'));
 
       this.migrate();
 
@@ -20,7 +29,9 @@ export default class Config {
         process.exit(1);
       }
     } catch (e) {
-      fs.copyFileSync('./config.example.json', './config.json');
+      const examplePath = join(rootDir, 'config.example.json');
+      const configPath = join(rootDir, 'config.json');
+      copyFileSync(examplePath, configPath);
 
       this.logger.error(`Новый файл конфигурации config.json был создан. Настойте его перед запуском скрипта`);
       process.exit(1);
@@ -87,6 +98,7 @@ export default class Config {
 
     this.config.version = this.version;
 
-    fs.writeFileSync('./config.json', JSON.stringify(this.config, null, 2));
+    const configPath = join(rootDir, 'config.json');
+    writeFileSync(configPath, JSON.stringify(this.config, null, 2));
   }
 }

@@ -1,35 +1,43 @@
 import Premier from './modules/sites/premier';
 import AntiCaptcha from "./modules/anticaptcha";
 import Config from "./modules/config";
-
-global.config = new Config().get();
-global.AntiCaptcha = new AntiCaptcha();
-
 import Logger from './modules/logger';
 import Tinkoff from "./modules/sites/tinkoff";
+// @ts-ignore
+import puppeteer from 'puppeteer';
+// @ts-ignore
+import { addExtra } from 'puppeteer-extra';
+// @ts-ignore
+import AdmZip from "adm-zip";
+// @ts-ignore
+import StealthPlugin from 'puppeteer-extra-plugin-stealth';
+// @ts-ignore
+import AdblockerPlugin from 'puppeteer-extra-plugin-adblocker';
+
+// Инициализируем глобальные объекты
+// @ts-ignore для игнорирования проблем с типами в Bun
+globalThis.config = new Config().get();
+// @ts-ignore для игнорирования проблем с типами в Bun
+globalThis.AntiCaptcha = new AntiCaptcha();
 
 const logger = new Logger({
   service: 'core'
 });
 
-const chromium = require('chrome-aws-lambda');
-const {addExtra} = require('puppeteer-extra');
-const puppeteer = addExtra(chromium.puppeteer);
-const AdmZip = require("adm-zip");
+const puppeteerExtra = addExtra(puppeteer);
 
 (async () => {
-  const StealthPlugin = require("puppeteer-extra-plugin-stealth");
   const stealth = StealthPlugin();
 
   stealth.enabledEvasions.delete('accept-language');
-  puppeteer.use(stealth)
+  puppeteerExtra.use(stealth)
 
-  if (global.config.plugins.adblock) {
-    const {DEFAULT_INTERCEPT_RESOLUTION_PRIORITY} = require('puppeteer');
+  if (globalThis.config.plugins.adblock) {
+    // @ts-ignore
+    const { DEFAULT_INTERCEPT_RESOLUTION_PRIORITY } = puppeteer;
 
-    const adblock = require('puppeteer-extra-plugin-adblocker');
-    puppeteer.use(
-      adblock({
+    puppeteerExtra.use(
+      AdblockerPlugin({
         interceptResolutionPriority: DEFAULT_INTERCEPT_RESOLUTION_PRIORITY,
         blockTrackers: false,
         useCache: true,
@@ -38,11 +46,16 @@ const AdmZip = require("adm-zip");
     );
   }
 
-  const browser = await puppeteer.launch({headless: global.config.browser.hide, devtools: global.config.browser.devtools});
-  const context = await browser.createIncognitoBrowserContext();
+  const browser = await puppeteerExtra.launch({
+    headless: globalThis.config.browser.hide ? 'new' : false, 
+    devtools: globalThis.config.browser.devtools,
+    args: ['--no-sandbox', '--disable-setuid-sandbox']
+  });
+  
+  const context = await browser.createBrowserContext();
 
-  for (let idx = 0; idx < global.config.phones.length; idx++) {
-    const phoneData = global.config.phones[idx];
+  for (let idx = 0; idx < globalThis.config.phones.length; idx++) {
+    const phoneData = globalThis.config.phones[idx];
 
     if (!phoneData.active) {
       continue;
@@ -50,11 +63,11 @@ const AdmZip = require("adm-zip");
 
     const sites: (typeof Premier | typeof Tinkoff)[] = [];
 
-    if (global.config.sites.premier) {
+    if (globalThis.config.sites.premier) {
       sites.push(Premier);
     }
 
-    if (global.config.sites.tinkoff) {
+    if (globalThis.config.sites.tinkoff) {
       sites.push(Tinkoff);
     }
 
